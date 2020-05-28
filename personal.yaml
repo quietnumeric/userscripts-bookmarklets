@@ -1,0 +1,8 @@
+serve:
+  port: 8991
+  queryHash: null
+  watch:
+    staticFiles: true
+    saveNothingChanged: true
+appNames:
+  - bookmarklets/url-splitter
