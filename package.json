@@ -1,9 +1,11 @@
 {
   "scripts": {
     "start": "yarn dev",
-    "app:now": "node app-now.js",
-    "app:set": "node app-set.js",
-    "app:list": "node app-list.js",
+    "app:now": "node app-manager.js now",
+    "app:add": "node app-manager.js -add",
+    "app:set": "node app-manager.js --set",
+    "app:has": "node app-manager.js ---has",
+    "app:new": "node app-manager.js ----new",
     "build": "webpack --config webpack/config/build.js",
     "serve": "webpack-dev-server --config webpack/config/serve.js",
     "dev:build": "yarn build --env.dev",
