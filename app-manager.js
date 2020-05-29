@@ -2,7 +2,6 @@ require('colors'); // eslint-disable-line
 const fs = require('fs');
 const readline = require('readline');
 const pja = require('./personal-json-accessor');
-const { createFile } = require('./tempula-core');
 
 const log = (obj) => console.log(obj);
 const getAppModuleNames = () => {
