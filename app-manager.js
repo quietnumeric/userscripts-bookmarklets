@@ -4,120 +4,18 @@ const readline = require('readline');
 const pja = require('./personal-json-accessor');
 
 const log = (obj) => console.log(obj);
-const getAppModuleNames = () => {
-  const expects = ['_util'];
-  const source = 'source';
-  const directories = fs.readdirSync(source);
-  const list = [];
-  directories
-    .filter((directory) => !expects.includes(directory))
-    .forEach((directory) => {
-      fs.readdirSync(`${source}/${directory}`)
-        .filter((name) => name.match(/\..+$/) && !name.match(/\.doc\.js$/))
-        .map((name) => name.replace(/\..+$/, ''))
-        .forEach((name) => list.push(`${directory}/${name}`));
-    });
-  return list;
-};
 
-const literals = {
-  specifiedAppNames: 'specified app names -> ',
-};
-
-const storeAppNames = (appNames) => {
-  const personalJson = pja.get();
-  personalJson.appNames = appNames;
-  pja.put(personalJson);
-};
-
-const getAppNamesStored = () => pja.get().appNames || [];
-
-const abort = (...messages) => {
-  log('Error: '.white.bgRed);
-  messages.forEach((message) => log(message.white.bgRed));
-  process.exit(0);
-};
-
-const addSet = () => {
-  const core = (doingText) => (storeFunc) => {
-    const args = process.argv.filter((arg, i) => i > 2);
-    if (args.length === 0) abort('specify app names.');
-
-    log(`${doingText} app names -> `.cyan);
-    args.forEach((arg) => log(arg.green));
-    log();
-    log('existing app names -> '.cyan);
-    const appModuleNames = getAppModuleNames();
-    appModuleNames.forEach((appName) => log(appName));
-
-    log();
-    const invalids = args.filter((arg) => !appModuleNames.includes(arg));
-    if (invalids.length > 0) abort('invalid app names -> ', ...invalids);
-
-    const storedAppNames = storeFunc(args);
-
-    log(literals.specifiedAppNames.cyan);
-    storedAppNames.forEach((appName) => log(appName.green));
-    log();
-    log(`done ${doingText} app names.`.green);
-  };
-
-  return {
-    add: core('adding'),
-    set: core('setting'),
-  };
-};
-
-const modeAdd = () => {
-  addSet().add((args) => {
-    const appNames = getAppNamesStored();
-    args
-      .filter((adding) => !appNames.includes(adding))
-      .forEach((adding) => appNames.push(adding));
-    storeAppNames(appNames);
-    return appNames;
-  });
-};
-
-const modeSet = () => {
-  addSet().set((args) => {
-    storeAppNames(args);
-    return args;
-  });
-};
-
-const modeHas = () => {
-  const appModuleNames = getAppModuleNames();
-  log(appModuleNames.join(' ').magenta);
-};
-
-const modeNow = () => {
-  const appNames = getAppNamesStored();
-
-  if (appNames.length > 0) {
-    log(literals.specifiedAppNames.cyan);
-    log(appNames.join(' ').green);
-    process.exit(0);
+const exists = (filePath) => {
+  try {
+    fs.statSync(filePath);
+    return true;
+  } catch (err) {
+    if (err.code === 'ENOENT') return false;
   }
-
-  log('nothing specified app names.'.yellow);
-  log('specify app names below using npm run app:set'.yellow);
-
-  const appModuleNames = getAppModuleNames();
-  log(appModuleNames.join(' ').yellow);
+  return false;
 };
 
-const modeNew = () => {
-  const exists = (filePath) => {
-    try {
-      fs.statSync(filePath);
-      return true;
-    } catch (err) {
-      if (err.code === 'ENOENT') return false;
-    }
-    return false;
-  };
-
+const modeNewDelegator = () => {
   const yynOptions = () => ({
     '': true,
     y: true,
@@ -281,10 +179,9 @@ const modeNew = () => {
 
     const answerOption = answerOptions[currentKey];
     answers[currentKey] = answerOption ? answerOption[line] : line;
-    log(answers);
+    // log(answers);
     const nextKey = current.nextKey();
     if (!nextKey) {
-      log(answers);
       createFiles();
       log('generated.'.green);
       process.exit(0);
@@ -306,12 +203,119 @@ const modeNew = () => {
   reader.prompt();
 };
 
+const getAppModuleNames = () => {
+  const expects = ['_util'];
+  const source = 'source';
+  const directories = fs.readdirSync(source);
+  const list = [];
+  directories
+    .filter((directory) => !expects.includes(directory))
+    .forEach((directory) => {
+      fs.readdirSync(`${source}/${directory}`)
+        .filter((name) => name.match(/\..+$/) && !name.match(/\.doc\.js$/))
+        .map((name) => name.replace(/\..+$/, ''))
+        .forEach((name) => list.push(`${directory}/${name}`));
+    });
+  return list;
+};
+
+const literals = {
+  specifiedAppNames: 'specified app names -> ',
+};
+
+const storeAppNames = (appNames) => {
+  const personalJson = pja.get();
+  personalJson.appNames = appNames;
+  pja.put(personalJson);
+};
+
+const getAppNamesStored = () => pja.get().appNames || [];
+
+const abort = (...messages) => {
+  log('Error: '.white.bgRed);
+  messages.forEach((message) => log(message.white.bgRed));
+  process.exit(0);
+};
+
+const addSet = () => {
+  const core = (doingText) => (storeFunc) => {
+    const args = process.argv.filter((arg, i) => i > 2);
+    if (args.length === 0) abort('specify app names.');
+
+    log(`${doingText} app names -> `.cyan);
+    args.forEach((arg) => log(arg.green));
+    log();
+    log('existing app names -> '.cyan);
+    const appModuleNames = getAppModuleNames();
+    appModuleNames.forEach((appName) => log(appName));
+
+    log();
+    const invalids = args.filter((arg) => !appModuleNames.includes(arg));
+    if (invalids.length > 0) abort('invalid app names -> ', ...invalids);
+
+    const storedAppNames = storeFunc(args);
+
+    log(literals.specifiedAppNames.cyan);
+    storedAppNames.forEach((appName) => log(appName.green));
+    log();
+    log(`done ${doingText} app names.`.green);
+  };
+
+  return {
+    add: core('adding'),
+    set: core('setting'),
+  };
+};
+
+const modeNew = () => {
+  modeNewDelegator();
+};
+
+const modeNow = () => {
+  const appNames = getAppNamesStored();
+
+  if (appNames.length > 0) {
+    log(literals.specifiedAppNames.cyan);
+    log(appNames.join(' ').green);
+    process.exit(0);
+  }
+
+  log('nothing specified app names.'.yellow);
+  log('specify app names below using npm run app:set'.yellow);
+
+  const appModuleNames = getAppModuleNames();
+  log(appModuleNames.join(' ').yellow);
+};
+
+const modeAdd = () => {
+  addSet().add((args) => {
+    const appNames = getAppNamesStored();
+    args
+      .filter((adding) => !appNames.includes(adding))
+      .forEach((adding) => appNames.push(adding));
+    storeAppNames(appNames);
+    return appNames;
+  });
+};
+
+const modeSet = () => {
+  addSet().set((args) => {
+    storeAppNames(args);
+    return args;
+  });
+};
+
+const modeHas = () => {
+  const appModuleNames = getAppModuleNames();
+  log(appModuleNames.join(' ').magenta);
+};
+
 const modeFuncs = {
+  new: modeNew, // new は関数名に使えない予約語なので、そこに合わせてmodeつけた
+  now: modeNow,
   add: modeAdd,
   set: modeSet,
   has: modeHas,
-  now: modeNow,
-  new: modeNew, // new は関数名に使えない予約語なので、そこに合わせてmodeつけた
 };
 
 const argToMode = (arg) => {
