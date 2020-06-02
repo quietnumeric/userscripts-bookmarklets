@@ -1,5 +1,5 @@
-require('colors'); // eslint-disable-line
-const merge = require('webpack-merge'); // eslint-disable-line
+require('colors'); // eslint-disable-line import/no-extraneous-dependencies
+const merge = require('webpack-merge'); // eslint-disable-line import/no-extraneous-dependencies
 const { outAppNames, config } = require('./commons/common');
 const { bundleFileName } = require('./commons/constants');
 const { AfterBundleProcessor } = require('./plugins/after-bundle-processor');

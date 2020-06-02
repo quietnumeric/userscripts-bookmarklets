@@ -1,5 +1,5 @@
-require('colors'); // eslint-disable-line
-const merge = require('webpack-merge'); // eslint-disable-line
+require('colors'); // eslint-disable-line import/no-extraneous-dependencies
+const merge = require('webpack-merge'); // eslint-disable-line import/no-extraneous-dependencies
 const { spawn } = require('child_process');
 const { outAppNames, config, personal } = require('./commons/common');
 const browsers = require('./commons/browsers');

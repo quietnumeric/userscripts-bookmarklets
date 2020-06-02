@@ -1,4 +1,4 @@
-require('colors'); // eslint-disable-line
+require('colors'); // eslint-disable-line import/no-extraneous-dependencies
 const fs = require('fs');
 const readline = require('readline');
 const pja = require('./personal-json-accessor');
