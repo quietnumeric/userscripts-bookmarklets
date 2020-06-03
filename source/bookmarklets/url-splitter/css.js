@@ -19,7 +19,7 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
   left: 5px;
   overflow: auto;
   max-height: calc(100% - 5px);
-  max-width: calc(100% - 5px);
+  max-width: calc(100% - 5px - 5px);
   background: #281f3e;
   color: #ccc;
   padding: 1em;
@@ -156,7 +156,18 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
      animation-delay使うとdelay終わるまで静的定義が露見してしまうので
      範囲で制御
    */
-  animation: ${apprefix(`fade-in-${classes.close}-pseudo`)} 1.5s ease-out;
+}
+.${classes.close}.${states.active}::before {
+  animation:
+    ${apprefix(`fade-in-${classes.close}-pseudo`)} 1.5s ease-out,
+    ${apprefix(`fade-in-${classes.close}-spin-before`)} 0.5s linear 3
+  ;
+}
+.${classes.close}.${states.active}::after {
+  animation:
+    ${apprefix(`fade-in-${classes.close}-pseudo`)} 1.5s ease-out,
+    ${apprefix(`fade-in-${classes.close}-spin-after`)} 0.5s linear 3
+  ;
 }
 @keyframes ${apprefix(`fade-in-${classes.close}-pseudo`)} {
   0% {
@@ -172,6 +183,40 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
   }
   100% {
     background: ${closeButtonColor};
+  }
+}
+@keyframes ${apprefix(`fade-in-${classes.close}-spin-before`)} {
+  0% {
+    transform: rotate(45deg);
+  }
+  25% {
+    transform: rotate(135deg);
+  }
+  50% {
+    transform: rotate(225deg);
+  }
+  75% {
+    transform: rotate(315deg);
+  }
+  100% {
+    transform: rotate(405deg);
+  }
+}
+@keyframes ${apprefix(`fade-in-${classes.close}-spin-after`)} {
+  0% {
+    transform: rotate(225deg);
+  }
+  25% {
+    transform: rotate(315deg);
+  }
+  50% {
+    transform: rotate(405deg);
+  }
+  75% {
+    transform: rotate(495deg);
+  }
+  100% {
+    transform: rotate(585deg);
   }
 }
 .${classes.close}::before {
