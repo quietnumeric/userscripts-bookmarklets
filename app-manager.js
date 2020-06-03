@@ -8,6 +8,90 @@ const isEmptyArgs = args.length === 0;
 const argsTop = args[0];
 
 const log = (obj) => console.log(obj);
+const logln = () => log('');
+
+const getAppModuleNames = () => {
+  const expects = ['_util'];
+  const source = 'source';
+  const directories = fs.readdirSync(source);
+  const list = [];
+  directories
+    .filter((directory) => !expects.includes(directory))
+    .forEach((directory) => {
+      fs.readdirSync(`${source}/${directory}`)
+        .filter((name) => name.match(/\..+$/) && !name.match(/\.doc\.js$/))
+        .map((name) => name.replace(/\..+$/, ''))
+        .forEach((name) => list.push(`${directory}/${name}`));
+    });
+  return list;
+};
+
+const literals = {
+  specifiedAppNames: 'specified app names -> ',
+};
+
+const storeAppNames = (appNames) => {
+  const personalJson = pja.get();
+  personalJson.appNames = appNames;
+  pja.put(personalJson);
+};
+
+const getAppNamesStored = () => pja.get().appNames || [];
+
+const abort = (...messages) => {
+  log('Error: '.white.bgRed);
+  messages.forEach((message) => log(message.white.bgRed));
+  process.exit(0);
+};
+
+const addSetAppNames = (doingAppNames) => {
+  const core = (doingText) => (storeFunc) => {
+    if (doingAppNames.length === 0) abort('specify app names.');
+
+    log(`${doingText} app names -> `.cyan);
+    doingAppNames.forEach((doingAppName) => log(doingAppName.green));
+    logln();
+    log('existing app names -> '.cyan);
+    const appModuleNames = getAppModuleNames();
+    appModuleNames.forEach((appModuleName) => log(appModuleName));
+
+    logln();
+    const invalids = doingAppNames.filter(
+      (doingAppName) => !appModuleNames.includes(doingAppName),
+    );
+    if (invalids.length > 0) abort('invalid app names -> ', ...invalids);
+
+    const storedAppNames = storeFunc();
+
+    log(literals.specifiedAppNames.cyan);
+    storedAppNames.forEach((appName) => log(appName.green));
+    logln();
+    log(`done ${doingText} app names.`.green);
+  };
+
+  return {
+    add: core('adding'),
+    set: core('setting'),
+  };
+};
+
+const addAppNames = (...addingAppNames) => {
+  addSetAppNames(addingAppNames).add(() => {
+    const appNames = getAppNamesStored();
+    addingAppNames
+      .filter((adding) => !appNames.includes(adding))
+      .forEach((adding) => appNames.push(adding));
+    storeAppNames(appNames);
+    return appNames;
+  });
+};
+
+const setAppNames = (...settingAppNames) => {
+  addSetAppNames(settingAppNames).set(() => {
+    storeAppNames(settingAppNames);
+    return settingAppNames;
+  });
+};
 
 const exists = (filePath) => {
   try {
@@ -20,16 +104,24 @@ const exists = (filePath) => {
 };
 
 const modeNewDelegator = () => {
-  const yynOptions = (line) => ({
+  const toOneCharOptions = (json) => (line) => json[line.toLowerCase()];
+  const yynOptions = toOneCharOptions({
     '': true,
     y: true,
     n: false,
-  }[line.toLowerCase()]);
+  });
 
   const directoryNames = {
     b: 'bookmarklets',
     u: 'userscripts',
   };
+
+  const appAddSetConstants = {
+    set: 'app:set',
+    add: 'app:add',
+    not: 'skip modify appNames.',
+  };
+
   const answers = {
     directory: '',
     appFileName: '',
@@ -37,19 +129,28 @@ const modeNewDelegator = () => {
     subModule: false,
     mockupTempula: false,
     userscriptTempula: false,
+    appAddSet: '',
   };
+
   const answerOptions = {
-    directory: (line) => ({
+    directory: toOneCharOptions({
       b: 'b',
       u: 'u',
-    }[line.toLowerCase()]),
+    }),
     appFileName: (line) => (line === '' ? argsTop : line),
     subDirectory: yynOptions,
     subModule: yynOptions,
     mockupTempula: yynOptions,
     userscriptTempula: yynOptions,
+    appAddSet: toOneCharOptions({
+      '': appAddSetConstants.set,
+      s: appAddSetConstants.set,
+      a: appAddSetConstants.add,
+      n: appAddSetConstants.not,
+    }),
   };
-  const toAppNamePath = (appFileName) => `./source/${directoryNames[answers.directory]}/${appFileName}`;
+  const toAppName = (appFileName) => `${directoryNames[answers.directory]}/${appFileName}`;
+  const toAppNamePath = (appFileName) => `./source/${toAppName(appFileName)}`;
   const toAppFilePath = (appFileName) => `${toAppNamePath(appFileName)}.js`;
   const yynScenatio = ({ ask, myKey, nextKey }) => ({
     ask: `${ask} (y)/n`,
@@ -65,7 +166,7 @@ const modeNewDelegator = () => {
     directory: {
       ask: 'Which is type bookmarklet or userscript? b/u',
       valid: (answer) => {
-        if (answerOptions.directory[answer.toLowerCase()]) return true;
+        if (answerOptions.directory(answer) !== undefined) return true;
         log('Requires b or u.'.yellow);
         return false;
       },
@@ -102,14 +203,23 @@ const modeNewDelegator = () => {
       ask: 'Generate mockup using tempula?',
       myKey: 'mockupTempula',
       nextKey: () => (answers.directory === answerOptions.directory.b
-        ? null
+        ? 'appAddSet'
         : 'userscriptTempula'),
     }),
     userscriptTempula: yynScenatio({
       ask: 'Generate doc.js using tempula?',
       myKey: 'userscriptTempula',
-      nextKey: () => null,
+      nextKey: () => 'appAddSet',
     }),
+    appAddSet: {
+      ask: 'Do app:set or app:add or not? (s)/a/n',
+      valid: (answer) => {
+        if (answerOptions.appAddSet(answer) !== undefined) return true;
+        log('Empty or requires s or a or n'.yellow);
+        return false;
+      },
+      nextKey: () => null,
+    },
   };
 
   const reader = readline.createInterface({
@@ -118,44 +228,43 @@ const modeNewDelegator = () => {
   });
   let currentKey = 'directory';
 
+  const fixFileBody = (body) => `${body.trim()}\n`;
+
   const subFileName = 'sub';
   const createFiles = () => {
-    const toFileBodyLogStatement = (...fileNames) => `console.log('${fileNames.join('.')}')`;
+    const directoryName = directoryNames[answers.directory];
+    const directoryPathSource = `./source/${directoryName}`;
     const appFileName = answers.appFileName;
     const appFilePath = toAppFilePath(appFileName);
-    const appFileNameLogStatement = toFileBodyLogStatement(appFileName);
-    const appFileBodyLines = answers.subModule
-      ? [
-        `import { ${subFileName} } from './${appFileName}/${subFileName}';`,
-        '',
-        `${appFileNameLogStatement};`,
-        `${subFileName}();`,
-        '',
-      ]
-      : [`${appFileNameLogStatement};`, ''];
-    fs.writeFileSync(appFilePath, appFileBodyLines.join('\n'));
+    const appFileBody = answers.subModule
+      ? `
+import { ${subFileName} } from './${appFileName}/${subFileName}';
+
+console.log('${appFileName}');
+${subFileName}();
+`
+      : `
+console.log('${appFileName}');
+`;
+    if (!exists(directoryPathSource)) fs.mkdirSync(directoryPathSource);
+    fs.writeFileSync(appFilePath, fixFileBody(appFileBody));
     if (answers.subDirectory) {
       const appNamePath = toAppNamePath(appFileName);
       fs.mkdirSync(appNamePath);
       if (answers.subModule) {
-        const subFileBodyLines = [
-          `export const ${subFileName} = () => ${toFileBodyLogStatement(
-            appFileName,
-            subFileName,
-          )};`,
-          '',
-          `export default ${subFileName};`,
-          '',
-        ];
+        const subFileBody = `
+export const ${subFileName} = () => console.log('${appFileName}.${subFileName}');
+
+export default ${subFileName};
+`;
         fs.writeFileSync(
           `${appNamePath}/${subFileName}.js`,
-          subFileBodyLines.join('\n'),
+          fixFileBody(subFileBody),
         );
       }
     }
     if (answers.mockupTempula || answers.userscriptTempula) {
       const projectRootPath = process.cwd();
-      const directoryName = directoryNames[answers.directory];
       const replaceTempula = (templateFileName, outputFilePath) => {
         const templateFilePath = `${projectRootPath}/.tempula/${templateFileName}`;
         const src = fs.readFileSync(templateFilePath, 'utf-8');
@@ -164,6 +273,8 @@ const modeNewDelegator = () => {
           .replace(/@timestamp@/g, new Date().getTime());
         fs.writeFileSync(outputFilePath, dst);
       };
+      const directoryPathMockup = `./mockup/${directoryName}`;
+      if (!exists(directoryPathMockup)) fs.mkdirSync(directoryPathMockup);
       if (answers.mockupTempula) {
         replaceTempula(
           'mockup.html',
@@ -177,6 +288,14 @@ const modeNewDelegator = () => {
         );
       }
     }
+  };
+
+  const appAddSet = () => {
+    if (answers.appAddSet === appAddSetConstants.not) return;
+    logln();
+    (answers.appAddSet === appAddSetConstants.set ? setAppNames : addAppNames)(
+      toAppName(answers.appFileName),
+    );
   };
 
   const boolToStr = {
@@ -201,9 +320,13 @@ const modeNewDelegator = () => {
     log(`< ${answerStr}`.green);
     const nextKey = current.nextKey();
     if (!nextKey) {
-      createFiles();
+      logln();
       log('-'.repeat(60).cyan);
+      log('Generating as:'.cyan);
       log(answers);
+      createFiles();
+      appAddSet();
+      logln();
       log('+ generated.'.green);
       process.exit(0);
     }
@@ -222,69 +345,6 @@ const modeNewDelegator = () => {
   const current = scenario[currentKey];
   log(current.ask.cyan);
   reader.prompt();
-};
-
-const getAppModuleNames = () => {
-  const expects = ['_util'];
-  const source = 'source';
-  const directories = fs.readdirSync(source);
-  const list = [];
-  directories
-    .filter((directory) => !expects.includes(directory))
-    .forEach((directory) => {
-      fs.readdirSync(`${source}/${directory}`)
-        .filter((name) => name.match(/\..+$/) && !name.match(/\.doc\.js$/))
-        .map((name) => name.replace(/\..+$/, ''))
-        .forEach((name) => list.push(`${directory}/${name}`));
-    });
-  return list;
-};
-
-const literals = {
-  specifiedAppNames: 'specified app names -> ',
-};
-
-const storeAppNames = (appNames) => {
-  const personalJson = pja.get();
-  personalJson.appNames = appNames;
-  pja.put(personalJson);
-};
-
-const getAppNamesStored = () => pja.get().appNames || [];
-
-const abort = (...messages) => {
-  log('Error: '.white.bgRed);
-  messages.forEach((message) => log(message.white.bgRed));
-  process.exit(0);
-};
-
-const addSet = () => {
-  const core = (doingText) => (storeFunc) => {
-    if (args.length === 0) abort('specify app names.');
-
-    log(`${doingText} app names -> `.cyan);
-    args.forEach((arg) => log(arg.green));
-    log();
-    log('existing app names -> '.cyan);
-    const appModuleNames = getAppModuleNames();
-    appModuleNames.forEach((appName) => log(appName));
-
-    log();
-    const invalids = args.filter((arg) => !appModuleNames.includes(arg));
-    if (invalids.length > 0) abort('invalid app names -> ', ...invalids);
-
-    const storedAppNames = storeFunc();
-
-    log(literals.specifiedAppNames.cyan);
-    storedAppNames.forEach((appName) => log(appName.green));
-    log();
-    log(`done ${doingText} app names.`.green);
-  };
-
-  return {
-    add: core('adding'),
-    set: core('setting'),
-  };
 };
 
 const modeNew = () => {
@@ -307,23 +367,9 @@ const modeNow = () => {
   log(appModuleNames.join(' ').yellow);
 };
 
-const modeAdd = () => {
-  addSet().add(() => {
-    const appNames = getAppNamesStored();
-    args
-      .filter((adding) => !appNames.includes(adding))
-      .forEach((adding) => appNames.push(adding));
-    storeAppNames(appNames);
-    return appNames;
-  });
-};
+const modeAdd = () => addAppNames(...args);
 
-const modeSet = () => {
-  addSet().set(() => {
-    storeAppNames(args);
-    return args;
-  });
-};
+const modeSet = () => setAppNames(...args);
 
 const modeHas = () => {
   const appModuleNames = getAppModuleNames();

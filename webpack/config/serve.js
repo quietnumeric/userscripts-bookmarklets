@@ -2,7 +2,7 @@ require('colors');
 const merge = require('webpack-merge');
 const { spawn } = require('child_process');
 const { outAppNames, config, personal } = require('./commons/common');
-const browsers = require('./commons/browsers');
+const { browsers } = require('./commons/browsers');
 
 const {
   appNames,
