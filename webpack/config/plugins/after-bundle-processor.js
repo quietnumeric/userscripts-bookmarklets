@@ -1,5 +1,5 @@
-require('colors'); // eslint-disable-line import/no-extraneous-dependencies
-const fs = require('fs-extra'); // eslint-disable-line import/no-extraneous-dependencies
+require('colors');
+const fs = require('fs-extra');
 const path = require('path');
 
 const { bundleFileName } = require('../commons/constants');

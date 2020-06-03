@@ -8,8 +8,7 @@ rules:
   # ペーストで済むようにJSONにとどめとこう
   no-unused-vars: 'warn'
   quotes: ['error', 'single']
-  no-console:
-    ['error', { allow: ['warn', 'error', 'log', 'dir'] }]
+  no-console: ['error', { allow: ['warn', 'error', 'log', 'dir'] }]
   comma-dangle: ['error', 'always-multiline']
   func-names: ['error', 'never']
   space-before-function-paren: ['error', 'never']
@@ -23,3 +22,5 @@ rules:
   yoda: [2, 'never', { 'exceptRange': true }]
   class-methods-use-this: 0
   max-len: ['warn', { 'code': 80 }]
+  import/no-extraneous-dependencies:
+    ['error', { devDependencies: true, optionalDependencies: false }]

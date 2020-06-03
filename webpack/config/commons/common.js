@@ -1,4 +1,4 @@
-require('colors'); // eslint-disable-line import/no-extraneous-dependencies
+require('colors');
 const pja = require('../../../personal-json-accessor');
 
 const personalJson = pja.get();

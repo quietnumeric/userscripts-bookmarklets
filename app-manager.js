@@ -1,7 +1,11 @@
-require('colors'); // eslint-disable-line import/no-extraneous-dependencies
+require('colors');
 const fs = require('fs');
 const readline = require('readline');
 const pja = require('./personal-json-accessor');
+
+const args = process.argv.filter((arg, i) => i > 2);
+const isEmptyArgs = args.length === 0;
+const argsTop = args[0];
 
 const log = (obj) => console.log(obj);
 
@@ -16,11 +20,11 @@ const exists = (filePath) => {
 };
 
 const modeNewDelegator = () => {
-  const yynOptions = () => ({
+  const yynOptions = (line) => ({
     '': true,
     y: true,
     n: false,
-  });
+  }[line.toLowerCase()]);
 
   const directoryNames = {
     b: 'bookmarklets',
@@ -35,21 +39,22 @@ const modeNewDelegator = () => {
     userscriptTempula: false,
   };
   const answerOptions = {
-    directory: {
+    directory: (line) => ({
       b: 'b',
       u: 'u',
-    },
-    subDirectory: yynOptions(),
-    subModule: yynOptions(),
-    mockupTempula: yynOptions(),
-    userscriptTempula: yynOptions(),
+    }[line.toLowerCase()]),
+    appFileName: (line) => (line === '' ? argsTop : line),
+    subDirectory: yynOptions,
+    subModule: yynOptions,
+    mockupTempula: yynOptions,
+    userscriptTempula: yynOptions,
   };
   const toAppNamePath = (appFileName) => `./source/${directoryNames[answers.directory]}/${appFileName}`;
   const toAppFilePath = (appFileName) => `${toAppNamePath(appFileName)}.js`;
   const yynScenatio = ({ ask, myKey, nextKey }) => ({
     ask: `${ask} (y)/n`,
     valid: (answer) => {
-      if (Object.keys(answerOptions[myKey]).includes(answer.toLowerCase())) return true;
+      if (answerOptions[myKey](answer) !== undefined) return true;
       log('Empty or requires y or n'.yellow);
       return false;
     },
@@ -67,9 +72,16 @@ const modeNewDelegator = () => {
       nextKey: () => 'appFileName',
     },
     appFileName: {
-      ask: 'What file name is(without extension)?',
+      ask: `What file name without extension is ?${
+        isEmptyArgs ? '' : ` (${argsTop})`
+      }`,
       valid: (answer) => {
-        const filePath = toAppFilePath(answer);
+        if (answer === '' && isEmptyArgs) {
+          log('Input.'.yellow);
+          return false;
+        }
+        const settingAnswer = answer === '' ? argsTop : answer;
+        const filePath = toAppFilePath(settingAnswer);
         if (!exists(filePath)) return true;
         log(`Exists ${filePath}.`.yellow);
         return false;
@@ -167,6 +179,11 @@ const modeNewDelegator = () => {
     }
   };
 
+  const boolToStr = {
+    true: 'yes',
+    false: 'no',
+  };
+
   // Enterキー押下で読み込み
   reader.on('line', (line) => {
     const current = scenario[currentKey];
@@ -177,13 +194,17 @@ const modeNewDelegator = () => {
       return;
     }
 
-    const answerOption = answerOptions[currentKey];
-    answers[currentKey] = answerOption ? answerOption[line] : line;
-    // log(answers);
+    const answer = answerOptions[currentKey](line);
+    answers[currentKey] = answer;
+    const boolStr = boolToStr[answer];
+    const answerStr = boolStr === undefined ? answer : boolStr; // なぜかor無理
+    log(`< ${answerStr}`.green);
     const nextKey = current.nextKey();
     if (!nextKey) {
       createFiles();
-      log('generated.'.green);
+      log('-'.repeat(60).cyan);
+      log(answers);
+      log('+ generated.'.green);
       process.exit(0);
     }
     const next = scenario[nextKey];
@@ -194,7 +215,7 @@ const modeNewDelegator = () => {
 
   // ctrl+Cで終了
   reader.on('close', () => {
-    log('canceled.'.yellow);
+    log('! canceled.'.yellow);
   });
 
   // コマンドプロンプトを表示
@@ -239,7 +260,6 @@ const abort = (...messages) => {
 
 const addSet = () => {
   const core = (doingText) => (storeFunc) => {
-    const args = process.argv.filter((arg, i) => i > 2);
     if (args.length === 0) abort('specify app names.');
 
     log(`${doingText} app names -> `.cyan);
@@ -253,7 +273,7 @@ const addSet = () => {
     const invalids = args.filter((arg) => !appModuleNames.includes(arg));
     if (invalids.length > 0) abort('invalid app names -> ', ...invalids);
 
-    const storedAppNames = storeFunc(args);
+    const storedAppNames = storeFunc();
 
     log(literals.specifiedAppNames.cyan);
     storedAppNames.forEach((appName) => log(appName.green));
@@ -288,7 +308,7 @@ const modeNow = () => {
 };
 
 const modeAdd = () => {
-  addSet().add((args) => {
+  addSet().add(() => {
     const appNames = getAppNamesStored();
     args
       .filter((adding) => !appNames.includes(adding))
@@ -299,7 +319,7 @@ const modeAdd = () => {
 };
 
 const modeSet = () => {
-  addSet().set((args) => {
+  addSet().set(() => {
     storeAppNames(args);
     return args;
   });

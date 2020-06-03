@@ -7,10 +7,12 @@
     "app:has": "node app-manager.js ---has",
     "app:new": "node app-manager.js ----new",
     "build": "webpack --config webpack/config/build.js",
+    "watch": "yarn build --watch",
     "serve": "webpack-dev-server --config webpack/config/serve.js",
     "dev:build": "yarn build --env.dev",
+    "dev:watch": "yarn watch --env.dev",
     "dev:serve": "yarn serve --env.dev",
-    "dev": "npm-run-all -p dev:build dev:serve"
+    "dev": "npm-run-all -p dev:watch dev:serve"
   },
   "devDependencies": {
     "@babel/core": "^7.9.6",
