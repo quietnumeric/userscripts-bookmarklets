@@ -76,7 +76,7 @@ module.exports = (commons) => (modeAddSet, args) => {
     let currentKey = Object.keys(scenario)[0];
 
     const appAddSet = () => {
-      if (answers.appAddSet === appAddSetConstants.not) return;
+      if (!answers.appAddSet || answers.appAddSet === appAddSetConstants.not) return;
       logln();
       const { modeAdd, modeSet } = modeAddSet(getAppName());
       (answers.appAddSet === appAddSetConstants.set ? modeSet : modeAdd)();
