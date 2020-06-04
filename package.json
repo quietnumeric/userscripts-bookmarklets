@@ -1,18 +1,17 @@
 {
   "scripts": {
-    "start": "yarn dev",
-    "app:now": "node app-manager.js now",
-    "app:add": "node app-manager.js -add",
-    "app:set": "node app-manager.js --set",
-    "app:has": "node app-manager.js ---has",
-    "app:new": "node app-manager.js ----new",
+    "dev": "npm-run-all -p dev:watch dev:serve",
+    "app:add": "node task/app-manager.js add",
+    "app:set": "node task/app-manager.js -set",
+    "app:has": "node task/app-manager.js --has",
+    "app:new": "node task/app-manager.js ---new",
+    "app:now": "node task/app-manager.js ----now",
     "build": "webpack --config webpack/config/build.js",
     "watch": "yarn build --watch",
     "serve": "webpack-dev-server --config webpack/config/serve.js",
     "dev:build": "yarn build --env.dev",
     "dev:watch": "yarn watch --env.dev",
-    "dev:serve": "yarn serve --env.dev",
-    "dev": "npm-run-all -p dev:watch dev:serve"
+    "dev:serve": "yarn serve --env.dev"
   },
   "devDependencies": {
     "@babel/core": "^7.9.6",
