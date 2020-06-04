@@ -5,9 +5,9 @@ const os = {
 };
 const browsers = {
   chrome: {
-    runtime: os.mac
-      ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-      : 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+    runtime: os.win
+      ? 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+      : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     urlToArg: (url) => url,
   },
 };
