@@ -37,25 +37,9 @@ const createMaterials = () => {
     className: classes.join(' '),
   });
 
-  const createCopiedMessage = (text) => dom(
-    'li',
-    classon(classNames.copiedMessage),
-    dom('span', 'copied:', classon(classNames.copiedTitle)),
-    dom('span', text, classon(classNames.copiedText)),
-  );
-
-  const copiedMessages = dom('ul', classon(classNames.copiedMessages));
-
   const close = dom('div', classon(classNames.close));
   const title = dom('span', 'URL Splitter', classon(classNames.title));
-  const head = dom(
-    'div',
-    classon(classNames.head),
-    title,
-    copiedMessages,
-    close,
-  );
-
+  const head = dom('div', classon(classNames.head), title, close);
   const getSelection = () => window.getSelection().toString();
   const domNameColumn = (text) => dom('span', text, classon(classNames.nameColumn));
   const domValueColumn = (...children) => dom('span', classon(classNames.valueColumn), ...children);
@@ -71,22 +55,31 @@ const createMaterials = () => {
       }
       document.execCommand('copy');
       const copiedStr = getSelection();
-      const copiedMessage = createCopiedMessage(copiedStr);
-
+      const copiedMessage = dom(
+        'div',
+        copiedStr,
+        classon(classNames.copiedMessage),
+      );
+      const style = copiedMessage.style;
+      const top = input.clientTop - 12;
+      const left = input.clientLeft + 21;
+      style.top = `${top}px`;
+      style.left = `${left}px`;
+      const parent = input.parentNode;
+      console.log(parent);
       setTimetable(
-        () => copiedMessages.insertBefore(copiedMessage, copiedMessages.firstChild),
+        () => parent.appendChild(copiedMessage),
         10,
         () => toActive(copiedMessage),
         intervals.copied.stay,
         () => cancelActive(copiedMessage),
         intervals.copied.remove,
-        () => copiedMessages.removeChild(copiedMessage),
+        () => parent.removeChild(copiedMessage),
       );
     });
     return input;
   };
   const liClasson = (index = 0) => (index === 0 ? classon(classNames.categoryTop) : []);
-  const ul = dom('ul', classon(classNames.ul));
   const hostLis = [
     dom(
       'li',
@@ -130,7 +123,7 @@ const createMaterials = () => {
       ),
     ];
   const lis = [...hostLis, ...pathLis, ...queryLis, ...hashLis];
-  addNodes(ul)(...lis);
+  const ul = dom('ul', classon(classNames.ul), ...lis);
   const outer = dom('div', classon(appClassName), head, ul);
   close.addEventListener('click', () => {
     cancelActive(outer);

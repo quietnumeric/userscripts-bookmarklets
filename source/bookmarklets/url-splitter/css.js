@@ -2,10 +2,12 @@ const separatorDefine = `
 width: 1em;
 margin: 0 1em;
 `;
-const widthTextKeyValueSpan = 'calc((100% - 3em) / 2)';
 const closeButtonColor = '#6609cf';
 const closeButtonColorHover = '#bca8ff';
 const fontFamilyMonospace = 'Consolas, \'Courier New\', Courier, Monaco, monospace';
+// classes.textのpadding-horとfont-sizeから
+const toFomulaTextKeyValueSpanWidth = () => '(100% - 3em) / 2';
+const toFormulaTextWidth = (basis) => `(${basis}) - 2.75em`;
 
 export const Css = (appClass, apprefix, classes, states, intervals) => `
 .${appClass} {
@@ -77,17 +79,20 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
 .${classes.title} {
 
 }
-.${classes.copiedMessages} {
-  flex: 1;
-  margin: 0.655em 2em 0 2em;
-  font-size: 0.8em;
-  list-style-type: none;
-  padding: 0;
-}
 .${classes.copiedMessage} {
+  border-radius: 0.5em;
+  position: absolute;
+  color: #000;
+  background: #ccc;
+  padding: 0.3em 0.75em;
+  font-size: 0.5em;
   font-family: ${fontFamilyMonospace};
-  display: flex;
-  margin-bottom: 1em;
+  overflow: hidden;
+  max-width: calc(${toFormulaTextWidth('80%')});
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+
   transform-origin: bottom;
   transform: translateY(100%);
   opacity: 0;
@@ -101,16 +106,6 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
   transition:
     transform ${intervals.copied.add}ms ease-out,
     opacity ${intervals.copied.add}ms ease-out;
-}
-.${classes.copiedTitle} {
-
-}
-.${classes.copiedText} {
-  margin-left: 0.5em;
-  overflow: hidden;
-  white-space: nowrap;
-  max-width: 25em;
-  text-overflow: ellipsis;
 }
 .${classes.close} {
   cursor: pointer;
@@ -369,7 +364,7 @@ forwards;
   font-family: ${fontFamilyMonospace};
   font-size: 0.75em;
   color: #eee;
-  width: calc(100% - 2.75em);
+  width: calc(${toFormulaTextWidth('100%')});
   padding: 0.5em 1em;
   outline: none;
   background: transparent;
@@ -395,22 +390,27 @@ forwards;
   color: transparent;
 }
 .${classes.textHost} {
+  position: relative;
   width: 100%;
 }
 .${classes.textPath} {
+  position: relative;
   width: 100%;
 }
 .${classes.textQueryKey} {
-  width: ${widthTextKeyValueSpan};
+  position: relative;
+  width: calc(${toFomulaTextKeyValueSpanWidth()});
 }
 .${classes.textQuerySeparator} {
   ${separatorDefine}
 }
 .${classes.textQueryValue} {
-  width: ${widthTextKeyValueSpan};
+  position: relative;
+  width: calc(${toFomulaTextKeyValueSpanWidth()});
 }
 .${classes.textHash} {
-  width: ${widthTextKeyValueSpan};
+  position: relative;
+  width: calc(${toFomulaTextKeyValueSpanWidth()});
 }
 .${classes.textHashSeparator} {
   ${separatorDefine}
@@ -418,7 +418,8 @@ forwards;
   transform: rotateZ(-45deg);
 }
 .${classes.textHashPlain} {
-  width: ${widthTextKeyValueSpan};
+  position: relative;
+  width: calc(${toFomulaTextKeyValueSpanWidth()});
 }
 `;
 
