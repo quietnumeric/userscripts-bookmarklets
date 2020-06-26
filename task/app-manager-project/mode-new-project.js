@@ -7,7 +7,8 @@ module.exports = ({
   isEmptyArgs,
   appAddSetConstants,
   yynOptions,
-  toYynScene,
+  nnyOptions,
+  toOptionsScene,
   toOneCharOptions,
   exists,
   fixFileBody,
@@ -33,7 +34,7 @@ module.exports = ({
       u: 'u',
     }),
     appFileName: (line) => (line === '' ? argsTop : line),
-    subDirectory: yynOptions,
+    subDirectory: nnyOptions,
     subModule: yynOptions,
     mockupTempula: yynOptions,
     userscriptTempula: yynOptions,
@@ -45,13 +46,20 @@ module.exports = ({
     }),
   };
 
-  const toAppName = (appFileName) => `${directoryNames[answers.directory]}/${appFileName}`;
+  const toAppName = (appFileName) =>
+    `${directoryNames[answers.directory]}/${appFileName}`;
   const toAppNamePath = (appFileName) => `./source/${toAppName(appFileName)}`;
   const toAppFilePath = (appFileName) => `${toAppNamePath(appFileName)}.js`;
 
-  const yynScene = toYynScene({
+  const yynScene = toOptionsScene({
     toAskTemplate: (ask) => `${ask} (y)/n`,
     toInvalidLogBody: () => 'Empty or requires y or n'.yellow,
+    answerOptions,
+  });
+
+  const nnyScene = toOptionsScene({
+    toAskTemplate: (ask) => `${ask} (n)/y`,
+    toInvalidLogBody: () => 'Empty or requires n or y'.yellow,
     answerOptions,
   });
 
@@ -82,7 +90,7 @@ module.exports = ({
       },
       nextKey: () => 'subDirectory',
     },
-    subDirectory: yynScene({
+    subDirectory: nnyScene({
       ask: 'Generate sub directory?',
       myKey: 'subDirectory',
       nextKey: () => (answers.subDirectory ? 'subModule' : 'mockupTempula'),
@@ -95,9 +103,10 @@ module.exports = ({
     mockupTempula: yynScene({
       ask: 'Generate mockup using tempula?',
       myKey: 'mockupTempula',
-      nextKey: () => (answers.directory === answerOptions.directory.b
-        ? 'appAddSet'
-        : 'userscriptTempula'),
+      nextKey: () =>
+        answers.directory === answerOptions.directory.b
+          ? 'appAddSet'
+          : 'userscriptTempula',
     }),
     userscriptTempula: yynScene({
       ask: 'Generate doc.js using tempula?',
@@ -143,7 +152,7 @@ export default ${subFileName};
 `;
         fs.writeFileSync(
           `${appNamePath}/${subFileName}.js`,
-          fixFileBody(subFileBody),
+          fixFileBody(subFileBody)
         );
       }
     }
@@ -162,13 +171,13 @@ export default ${subFileName};
       if (answers.mockupTempula) {
         replaceTempula(
           'mockup.html',
-          `./mockup/${directoryName}/${appFileName}.html`,
+          `./mockup/${directoryName}/${appFileName}.html`
         );
       }
       if (answers.userscriptTempula) {
         replaceTempula(
           'userscript.doc.js',
-          `./source/${directoryName}/${appFileName}.doc.js`,
+          `./source/${directoryName}/${appFileName}.doc.js`
         );
       }
     }

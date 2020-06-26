@@ -2,7 +2,6 @@ module.exports = (commons) => (...doingAppNames) => {
   const {
     log,
     logln,
-    abort,
     getAppModuleNames,
     literals,
     getAppNamesStored,
@@ -10,29 +9,35 @@ module.exports = (commons) => (...doingAppNames) => {
   } = commons;
 
   const addSetAppNames = () => {
-    const core = (doingText) => (storeFunc) => {
-      if (doingAppNames.length === 0) abort('specify app names.');
+    const core = (doingText) => (storeFunc) =>
+      new Promise((resolve, reject) => {
+        if (doingAppNames.length === 0)
+          return reject(new Error(['specify app names.']));
 
-      log(`${doingText} app names -> `.cyan);
-      doingAppNames.forEach((doingAppName) => log(doingAppName.green));
-      logln();
-      log('existing app names -> '.cyan);
-      const appModuleNames = getAppModuleNames();
-      appModuleNames.forEach((appModuleName) => log(appModuleName));
+        log(`${doingText} app names -> `.cyan);
+        doingAppNames.forEach((doingAppName) => log(doingAppName.green));
+        logln();
+        log('existing app names -> '.cyan);
+        const appModuleNames = getAppModuleNames();
+        appModuleNames.forEach((appModuleName) => log(appModuleName));
 
-      logln();
-      const invalids = doingAppNames.filter(
-        (doingAppName) => !appModuleNames.includes(doingAppName),
-      );
-      if (invalids.length > 0) abort('invalid app names -> ', ...invalids);
+        logln();
+        const invalids = doingAppNames.filter(
+          (doingAppName) => !appModuleNames.includes(doingAppName)
+        );
+        if (invalids.length > 0)
+          return reject(
+            new Error(`invalid app names -> ${invalids.join(' ')}`)
+          );
 
-      const storedAppNames = storeFunc();
+        const storedAppNames = storeFunc();
 
-      log(literals.specifiedAppNames.cyan);
-      storedAppNames.forEach((appName) => log(appName.green));
-      logln();
-      log(`done ${doingText} app names.`.green);
-    };
+        log(literals.specifiedAppNames.cyan);
+        storedAppNames.forEach((appName) => log(appName.green));
+        logln();
+        log(`done ${doingText} app names.`.green);
+        return resolve(true);
+      });
 
     return {
       add: core('adding'),
@@ -40,8 +45,8 @@ module.exports = (commons) => (...doingAppNames) => {
     };
   };
 
-  const modeAdd = () => {
-    addSetAppNames().add(() => {
+  const modeAdd = async () => {
+    const resolved = await addSetAppNames().add(() => {
       const appNames = getAppNamesStored();
       doingAppNames
         .filter((adding) => !appNames.includes(adding))
@@ -49,13 +54,15 @@ module.exports = (commons) => (...doingAppNames) => {
       storeAppNames(appNames);
       return appNames;
     });
+    return resolved;
   };
 
-  const modeSet = () => {
-    addSetAppNames().set(() => {
+  const modeSet = async () => {
+    const resolved = await addSetAppNames().set(() => {
       storeAppNames(doingAppNames);
       return doingAppNames;
     });
+    return resolved;
   };
 
   return {

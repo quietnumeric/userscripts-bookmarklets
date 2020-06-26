@@ -1,6 +1,6 @@
 const fs = require('fs');
 const readline = require('readline');
-const Project = require('./mode-new-project');
+const Project = require('../app-manager-project/mode-new-project');
 
 module.exports = (commons) => (modeAddSet, args) => {
   const { log, logln } = commons;
@@ -24,6 +24,11 @@ module.exports = (commons) => (modeAddSet, args) => {
       y: true,
       n: false,
     });
+    const nnyOptions = toOneCharOptions({
+      '': false,
+      n: false,
+      y: true,
+    });
 
     const appAddSetConstants = {
       set: 'app:set',
@@ -31,7 +36,7 @@ module.exports = (commons) => (modeAddSet, args) => {
       not: 'Skip modify appNames.',
     };
 
-    const toYynScene = ({
+    const toOptionsScene = ({
       toAskTemplate,
       toInvalidLogBody,
       answerOptions,
@@ -62,7 +67,8 @@ module.exports = (commons) => (modeAddSet, args) => {
       isEmptyArgs,
       appAddSetConstants,
       yynOptions,
-      toYynScene,
+      nnyOptions,
+      toOptionsScene,
       toOneCharOptions,
       exists,
       fixFileBody,
@@ -70,65 +76,86 @@ module.exports = (commons) => (modeAddSet, args) => {
     });
 
     const reader = readline.createInterface({
-      input: process.stdin, // 標準入力
-      output: process.stdout, // 標準出力
+      input: process.stdin,
+      output: process.stdout,
     });
     let currentKey = Object.keys(scenario)[0];
-
-    const appAddSet = () => {
-      if (!answers.appAddSet || answers.appAddSet === appAddSetConstants.not) return;
-      logln();
-      const { modeAdd, modeSet } = modeAddSet(getAppName());
-      (answers.appAddSet === appAddSetConstants.set ? modeSet : modeAdd)();
-    };
 
     const boolToStr = {
       true: 'Yes',
       false: 'No',
     };
 
-    // Enterキー押下で読み込み
-    reader.on('line', (line) => {
-      const current = scenario[currentKey];
-      const valid = current.valid;
-      if (valid && !valid(line)) {
-        log(current.ask.yellow);
-        reader.prompt();
-        return;
-      }
+    return new Promise((resolve, reject) => {
+      let closeWithDone = false;
+      let appAddSetResolved = false;
 
-      const answer = answerOptions[currentKey](line);
-      answers[currentKey] = answer;
-      const boolStr = boolToStr[answer];
-      const answerStr = boolStr === undefined ? answer : boolStr; // なぜかor無理
-      log(`< ${answerStr}`.green);
-      const nextKey = current.nextKey();
-      if (!nextKey) {
+      const appAddSet = async () => {
+        if (!answers.appAddSet || answers.appAddSet === appAddSetConstants.not)
+          return true;
+        logln();
+        const { modeAdd, modeSet } = modeAddSet(getAppName());
+        const resolved = await (answers.appAddSet === appAddSetConstants.set
+          ? modeSet
+          : modeAdd)().catch((error) => reject(error));
+        return resolved;
+      };
+
+      const finalyze = async () => {
         logln();
         log('-'.repeat(60).cyan);
         log('Generating as:'.cyan);
         log(answers);
         createFiles();
-        appAddSet();
+        appAddSetResolved = await appAddSet();
+        if (!appAddSetResolved) {
+          reader.close();
+          return;
+        }
         logln();
         log('+ generated.'.green);
-        process.exit(0);
-      }
-      const next = scenario[nextKey];
-      currentKey = nextKey;
-      log(next.ask.cyan);
+        closeWithDone = true;
+        reader.close();
+      };
+
+      reader.on('line', async (line) => {
+        const current = scenario[currentKey];
+        const valid = current.valid;
+        if (valid && !valid(line)) {
+          log(current.ask.yellow);
+          reader.prompt();
+          return;
+        }
+
+        const answer = answerOptions[currentKey](line);
+        answers[currentKey] = answer;
+        const boolStr = boolToStr[answer];
+        const answerStr = boolStr === undefined ? answer : boolStr; // なぜかor無理
+        log(`< ${answerStr}`.green);
+        const nextKey = current.nextKey();
+        if (!nextKey) {
+          await finalyze();
+          return;
+        }
+        const next = scenario[nextKey];
+        currentKey = nextKey;
+        log(next.ask.cyan);
+        reader.prompt();
+      });
+
+      const current = scenario[currentKey];
+      log(current.ask.cyan);
       reader.prompt();
-    });
 
-    // ctrl+Cで終了
-    reader.on('close', () => {
-      log('! canceled.'.yellow);
+      reader.on('close', () => {
+        // この条件は「ctrl+Cで終了された時」
+        if (!closeWithDone && appAddSetResolved) log('! canceled.'.yellow);
+        // appAddSetがrejectされた場合は、このresolveは死に値
+        // このモジュールの呼び出し元で既にrejectがcatchされて次の処理が動き出した後になる
+        // イベントリスナー系(hoge.on())を扱うとこういうのは仕方なさそう
+        return resolve();
+      });
     });
-
-    // コマンドプロンプトを表示
-    const current = scenario[currentKey];
-    log(current.ask.cyan);
-    reader.prompt();
   };
   return {
     modeNew,

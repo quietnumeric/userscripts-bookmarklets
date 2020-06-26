@@ -1,10 +1,12 @@
 module.exports = (commons) => {
   const { log, getAppModuleNames } = commons;
 
-  const modeHas = () => {
-    const appModuleNames = getAppModuleNames();
-    log(appModuleNames.join(' ').magenta);
-  };
+  const modeHas = () =>
+    new Promise((resolve) => {
+      const appModuleNames = getAppModuleNames();
+      log(appModuleNames.join(' ').green);
+      return resolve();
+    });
 
   return {
     modeHas,

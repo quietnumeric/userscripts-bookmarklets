@@ -22,25 +22,40 @@ const modeFuncs = {
   now: modeNow,
 };
 
-const { log, abort } = commons;
-
+const { log, logln } = commons;
+const errLog = (message) => log(message.white.bgRed);
+const apmLogTitle = 'app-manager';
+const ApmLog = (mode) => {
+  const core = (phase) =>
+    log(`${apmLogTitle}[${mode}] ${`${phase} `.padEnd(20, '-')}`.magenta);
+  return {
+    start: () => core('start'),
+    end: () => core('end'),
+  };
+};
 const argToMode = (arg) => {
   const modes = Object.keys(modeFuncs);
   const exit = () => {
-    log('app-manager'.magenta);
-    abort(`Error: Pass arg one of [${modes.join(', ')}].`);
+    log(apmLogTitle.magenta);
+    errLog(`Error: Pass arg one of [${modes.join(', ')}].`);
   };
   if (!arg) exit();
   const mode = arg.replace(/^-+/, '');
   if (!modes.includes(mode)) exit();
   return mode;
 };
-
-const main = () => {
+const main = async () => {
   const arg = process.argv[2];
   const mode = argToMode(arg);
-  log(`app-manager[${mode}]`.magenta);
-  modeFuncs[mode]();
+  const apmLog = ApmLog(mode);
+  logln();
+  apmLog.start();
+  await modeFuncs[mode]().catch((error) => {
+    errLog('Error: ');
+    errLog(error.message);
+  });
+  apmLog.end();
+  logln();
 };
 
 main();
