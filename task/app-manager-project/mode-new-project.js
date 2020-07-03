@@ -10,7 +10,6 @@ module.exports = ({
   nnyOptions,
   toOptionsScene,
   toOneCharOptions,
-  exists,
   fixFileBody,
   subName: subFileName,
 }) => {
@@ -84,7 +83,7 @@ module.exports = ({
         }
         const settingAnswer = answer === '' ? argsTop : answer;
         const filePath = toAppFilePath(settingAnswer);
-        if (!exists(filePath)) return true;
+        if (!fs.existsSync(filePath)) return true;
         log(`Exists ${filePath}.`.yellow);
         return false;
       },
@@ -139,7 +138,7 @@ ${subFileName}();
       : `
 console.log('${appFileName}');
 `;
-    if (!exists(directoryPathSource)) fs.mkdirSync(directoryPathSource);
+    if (!fs.existsSync(directoryPathSource)) fs.mkdirSync(directoryPathSource);
     fs.writeFileSync(appFilePath, fixFileBody(appFileBody));
     if (answers.subDirectory) {
       const appNamePath = toAppNamePath(appFileName);
@@ -167,7 +166,8 @@ export default ${subFileName};
         fs.writeFileSync(outputFilePath, dst);
       };
       const directoryPathMockup = `./mockup/${directoryName}`;
-      if (!exists(directoryPathMockup)) fs.mkdirSync(directoryPathMockup);
+      if (!fs.existsSync(directoryPathMockup))
+        fs.mkdirSync(directoryPathMockup);
       if (answers.mockupTempula) {
         replaceTempula(
           'mockup.html',

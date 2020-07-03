@@ -1,10 +1,11 @@
 require('colors');
 const fs = require('fs-extra');
-const path = require('path');
+const pathUtil = require('path');
 
 const { bundleFileName } = require('../commons/constants');
 
-const wrap = (body, separator = '') => ['(function() {', body, '})();'].join(separator);
+const wrap = (body, separator = '') =>
+  ['(function() {', body, '})();'].join(separator);
 
 const exists = (filePath) => {
   try {
@@ -55,7 +56,7 @@ const processor = (entry, name, outputFilePathTemplate) => {
       `###### ${directory}
 
 # ${app}
-`,
+`
     );
   }
 };
@@ -68,9 +69,11 @@ class AfterBundleProcessor {
           output: { path: directoryPath, filename: fileName },
         },
       } = compilation;
-      const outputFilePathTemplate = path.resolve(directoryPath, fileName);
+      const outputFilePathTemplate = pathUtil.resolve(directoryPath, fileName);
       const entry = compilation.options.entry;
-      Object.keys(entry).forEach((name) => processor(entry, name, outputFilePathTemplate));
+      Object.keys(entry).forEach((name) =>
+        processor(entry, name, outputFilePathTemplate)
+      );
     });
   }
 }

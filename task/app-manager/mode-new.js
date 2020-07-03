@@ -7,16 +7,6 @@ module.exports = (commons) => (modeAddSet, args) => {
   const isEmptyArgs = args.length === 0;
   const argsTop = args[0];
 
-  const exists = (filePath) => {
-    try {
-      fs.statSync(filePath);
-      return true;
-    } catch (err) {
-      if (err.code === 'ENOENT') return false;
-    }
-    return false;
-  };
-
   const modeNew = () => {
     const toOneCharOptions = (json) => (line) => json[line.toLowerCase()];
     const yynOptions = toOneCharOptions({
@@ -70,7 +60,6 @@ module.exports = (commons) => (modeAddSet, args) => {
       nnyOptions,
       toOptionsScene,
       toOneCharOptions,
-      exists,
       fixFileBody,
       subName,
     });

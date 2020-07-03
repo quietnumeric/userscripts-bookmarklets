@@ -1,18 +1,18 @@
 const fs = require('fs');
-const path = require('path');
+const pathUtil = require('path');
 const readline = require('readline');
 
 const excludingAbsoluteDirPaths = ['.git', './node_modules'];
 
 const destroyingFileName = '.DS_Store';
 const excludingNormalizedAbsoluteDirPaths = excludingAbsoluteDirPaths.map(
-  (dirPath) => path.normalize(dirPath)
+  (dirPath) => pathUtil.normalize(dirPath)
 );
 
 const recurseGetDsStorePaths = (currentPath, dsStorePaths = []) =>
   fs
     .readdirSync(currentPath)
-    .map((name) => path.join(currentPath, name))
+    .map((name) => pathUtil.join(currentPath, name))
     .filter(
       (filePath) => !excludingNormalizedAbsoluteDirPaths.includes(filePath)
     )
