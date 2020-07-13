@@ -1,7 +1,7 @@
 const readline = require('readline');
 const Project = require('../app-manager-project/mode-new-project');
 
-const doActualGenerating = false;
+const doActualGenerating = true;
 
 module.exports = (commons) => (modeAddSet, args) => {
   const { log, logln, GitignoreAccessor } = commons;
