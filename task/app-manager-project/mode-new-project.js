@@ -12,6 +12,7 @@ module.exports = ({
   toOneCharOptions,
   fixFileBody,
   subName: subFileName,
+  isFunction,
 }) => {
   const directoryNames = {
     b: 'bookmarklets',
@@ -50,15 +51,25 @@ module.exports = ({
   const toAppNamePath = (appFileName) => `./source/${toAppName(appFileName)}`;
   const toAppFilePath = (appFileName) => `${toAppNamePath(appFileName)}.js`;
 
+  const toDefaultAnotherOptionSceneMessages = (
+    defaultOption,
+    anotherOption
+  ) => ({
+    toAskTemplate: (ask) =>
+      isFunction(ask)
+        ? () => `${ask()} (${defaultOption})/${anotherOption}`
+        : `${ask} (${defaultOption})/${anotherOption}`,
+    toInvalidLogBody: () =>
+      `Empty or requires ${defaultOption} or ${anotherOption}`.yellow,
+  });
+
   const yynScene = toOptionsScene({
-    toAskTemplate: (ask) => `${ask} (y)/n`,
-    toInvalidLogBody: () => 'Empty or requires y or n'.yellow,
+    ...toDefaultAnotherOptionSceneMessages('y', 'n'),
     answerOptions,
   });
 
   const nnyScene = toOptionsScene({
-    toAskTemplate: (ask) => `${ask} (n)/y`,
-    toInvalidLogBody: () => 'Empty or requires n or y'.yellow,
+    ...toDefaultAnotherOptionSceneMessages('n', 'y'),
     answerOptions,
   });
 

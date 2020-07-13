@@ -1,9 +1,10 @@
-const fs = require('fs');
 const readline = require('readline');
 const Project = require('../app-manager-project/mode-new-project');
 
+const doActualGenerating = false;
+
 module.exports = (commons) => (modeAddSet, args) => {
-  const { log, logln } = commons;
+  const { log, logln, GitignoreAccessor } = commons;
   const isEmptyArgs = args.length === 0;
   const argsTop = args[0];
 
@@ -44,12 +45,16 @@ module.exports = (commons) => (modeAddSet, args) => {
 
     const subName = 'sub';
 
+    const isFunction = (obj) => typeof obj === 'function';
+
     const {
       answers,
       answerOptions,
       scenario,
       createFiles,
+      addToGitignore,
       getAppName,
+      generatedLog,
     } = Project({
       log,
       logln,
@@ -62,6 +67,7 @@ module.exports = (commons) => (modeAddSet, args) => {
       toOneCharOptions,
       fixFileBody,
       subName,
+      isFunction,
     });
 
     const reader = readline.createInterface({
@@ -74,6 +80,8 @@ module.exports = (commons) => (modeAddSet, args) => {
       true: 'Yes',
       false: 'No',
     };
+
+    const border = () => '-'.repeat(60);
 
     return new Promise((resolve, reject) => {
       let closeWithDone = false;
@@ -90,19 +98,41 @@ module.exports = (commons) => (modeAddSet, args) => {
         return resolved;
       };
 
+      const mergeGitignoreStatements = () => {
+        const appName = getAppName();
+
+        const gitignore = GitignoreAccessor();
+        const updater = gitignore.toUpdater(appName);
+
+        (answers.gitignoreSourcePublic || answers.gitignorePublic
+          ? updater.public.ignore
+          : updater.public.notice)();
+        (answers.gitignoreSourcePublic
+          ? updater.source.ignore
+          : updater.source.notice)();
+
+        gitignore.write();
+      };
+
       const finalyze = async () => {
         logln();
-        log('-'.repeat(60).cyan);
+        log(border().cyan);
         log('Generating as:'.cyan);
         log(answers);
-        createFiles();
-        appAddSetResolved = await appAddSet();
-        if (!appAddSetResolved) {
-          reader.close();
-          return;
+        if (doActualGenerating) {
+          createFiles();
+          appAddSetResolved = await appAddSet();
+          if (!appAddSetResolved) {
+            reader.close();
+            return;
+          }
+          if (addToGitignore) mergeGitignoreStatements();
         }
+
+        log(border().cyan);
         logln();
-        log('+ generated.'.green);
+        log('+ Generated.'.green);
+        if (generatedLog) generatedLog();
         closeWithDone = true;
         reader.close();
       };
@@ -128,7 +158,8 @@ module.exports = (commons) => (modeAddSet, args) => {
         }
         const next = scenario[nextKey];
         currentKey = nextKey;
-        log(next.ask.cyan);
+        const ask = isFunction(next.ask) ? next.ask() : next.ask;
+        log(ask.cyan);
         reader.prompt();
       });
 
