@@ -19,12 +19,13 @@ const splitCssDefine = (source) => {
     // 最適化目的の末尾再帰のため、先行代入
     let remainsSource = splittingSource;
     // 次の要素(分割抽出する場合は残る文字列、しない場合は検索の)開始位置
-    let nextElementStartIndex = searchStartIndex + bracketIndexFromSearchStart + 1;
+    let nextElementStartIndex =
+      searchStartIndex + bracketIndexFromSearchStart + 1;
     // トップ階層に戻っていれば分割抽出
     if (downedStairCount === 0) {
       // 先頭から次の要素の開始位置前までを抽出
       splittedArray.push(
-        splittingSource.slice(0, nextElementStartIndex).trim(),
+        splittingSource.slice(0, nextElementStartIndex).trim()
       );
       // 次の要素の開始位置以降が残りの分割中文字列
       remainsSource = splittingSource.slice(nextElementStartIndex);
@@ -45,6 +46,7 @@ const createStyleSheet = () => {
   return style.sheet;
 };
 
+// css定義をstylesheetに適用
 export const appendStyle = (define, sheet = createStyleSheet()) => {
   // 記述順どおりにinsertRuleしようと思ったらindexを管理するかsplit結果をreverseするべき
   splitCssDefine(define)
@@ -55,5 +57,6 @@ export const appendStyle = (define, sheet = createStyleSheet()) => {
     });
 };
 
-// css定義をstylesheetに適用
-export default appendStyle;
+export default {
+  appendStyle,
+};

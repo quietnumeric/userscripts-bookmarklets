@@ -1,36 +1,37 @@
-const defineProperty = (json, key, innerKey, func) => {
-  Object.defineProperty(json, key, {
-    get: () => json[innerKey],
+const defineProperty = (object, key, innerKey, func) => {
+  Object.defineProperty(object, key, {
+    get: () => object[innerKey],
     set: (newValue) => {
-      if (json[innerKey] === newValue) return;
-      json[innerKey] = newValue;
+      if (object[innerKey] === newValue) return;
+      object[innerKey] = newValue;
       if (func) func(newValue);
     },
   });
 };
 
-export const Observer = (json) => {
+export const Observer = (object) => {
   const unbind = (key) => {
     const innerKey = `_${key}`;
-    defineProperty(json, key, innerKey);
+    defineProperty(object, key, innerKey);
     // eslint-disable-next-line no-use-before-define
     return { bind, unbind };
   };
   const bind = (key, func) => {
     const innerKey = `_${key}`;
-    json[innerKey] = json[key];
-    func(json[key]);
-    defineProperty(json, key, innerKey, func);
+    object[innerKey] = object[key];
+    func(object[key]);
+    defineProperty(object, key, innerKey, func);
     return { bind, unbind };
   };
   return { bind, unbind };
 };
 
-const observedKeys = json => Object.keys(json).filter(key => !key.startsWith('_'));
+const observedKeys = (object) =>
+  Object.keys(object).filter((key) => !key.startsWith('_'));
 
 export const Observed = {
-  keys: json => observedKeys(json),
-  values: json => observedKeys(json).map(key => json[key]),
+  keys: (object) => observedKeys(object),
+  values: (object) => observedKeys(object).map((key) => object[key]),
 };
 
 export default {

@@ -1,16 +1,30 @@
+import { reassignBulkProps } from './reassign-bulk-props';
+
+const silently = false;
+
 const separatorDefine = `
 width: 1em;
 margin: 0 1em;
 `;
-const closeButtonColor = '#6609cf';
+const closeButtonColor = silently ? '#aaa' : '#6609cf';
 const closeButtonColorHover = '#bca8ff';
-const fontFamilyMonospace = 'Consolas, \'Courier New\', Courier, Monaco, monospace';
+const fontFamilyMonospace =
+  "Consolas, 'Courier New', Courier, Monaco, monospace";
 // classes.textのpadding-horとfont-sizeから
 const toFomulaTextKeyValueSpanWidth = () => '(100% - 3em) / 2';
 const toFormulaTextWidth = (basis) => `(${basis}) - 2.75em`;
+const background = silently ? '#999' : '#281f3e';
 
-export const Css = (appClass, apprefix, classes, states, intervals) => `
-.${appClass} {
+export const createStyle = (
+  appClassName,
+  apprefix,
+  classes,
+  states,
+  durations
+) => {
+  if (silently) reassignBulkProps(durations, 'number', 0);
+  return `
+.${appClassName} {
   font-family:
     "Montserrat","游ゴシック",YuGothic,
     "ヒラギノ角ゴ ProN W3","Hiragino Kaku Gothic ProN",
@@ -22,45 +36,55 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
   overflow: auto;
   max-height: calc(100% - 5px);
   max-width: calc(100% - 5px - 5px);
-  background: #281f3e;
+  background: ${background};
   color: #ccc;
   padding: 1em;
   font-size: 20px;
   box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
-  transform-origin: top;
-  transform: scale(1, 0);
+  transform-origin: left top;
+  transform: scale(0, 0);
   opacity: 0;
   transition:
-    box-shadow 0.2s ease-out,
-    transform ${intervals.outer.open}ms ease-out,
-    opacity ${intervals.outer.open}ms ease-out
+    box-shadow ${durations.general.backword}ms ease-out,
+    transform ${durations.outer.close}ms ease-out,
+    opacity ${durations.outer.close}ms ease-out;
   ;
   user-select: none;
 }
-.${appClass} {
+.${appClassName} {
   box-sizing: border-box;
 }
 .${classes.close} {
   box-sizing: content-box;
 }
-.${appClass}:hover {
+.${appClassName}:hover {
   box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.75);
   transition:
-    box-shadow 0.3s ease-out,
-    transform ${intervals.outer.close}ms ease-out,
-    opacity ${intervals.outer.close}ms ease-out
+    box-shadow ${durations.general.forward}ms ease-out,
+    transform ${durations.outer.close}ms ease-out,
+    opacity ${durations.outer.close}ms ease-out
   ;
 }
-.${appClass}.${states.active} {
+.${appClassName}.${states.active} {
   transform: scale(1, 1);
   opacity: 1;
+  animation: ${apprefix(`fade-in-${appClassName}`)} ${
+    durations.outer.open
+  }ms ease-out;
 }
-@keyframes ${apprefix(`fade-in-${appClass}`)} {
-  from {
-    transform: scale(1, 0);
+@keyframes ${apprefix(`fade-in-${appClassName}`)} {
+  0% {
+    transform: scale(0, 0);
     opacity: 0;
   }
-  to {
+  1% {
+    transform: scale(0, 0.01);
+    opacity: 1;
+  }
+  25% {
+    transform: scale(1, 0.01);
+  }
+  100% {
     transform: scale(1, 1);
     opacity: 1;
   }
@@ -74,7 +98,7 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
 }
 .${classes.head}.${states.active} {
   opacity: 1;
-  transition: opacity ${intervals.head}ms ease-out;
+  transition: opacity ${durations.head.fadeIn}ms ease-out;
 }
 .${classes.title} {
 
@@ -97,15 +121,15 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
   transform: translateY(100%);
   opacity: 0;
   transition:
-    transform ${intervals.copied.remove}ms ease-out,
-    opacity ${intervals.copied.remove / 2}ms ease-out;
+    transform ${durations.copied.remove}ms ease-out,
+    opacity ${durations.copied.remove / 2}ms ease-out;
 }
 .${classes.copiedMessage}.${states.active} {
   transform: translateY(0);
   opacity: 1;
   transition:
-    transform ${intervals.copied.add}ms ease-out,
-    opacity ${intervals.copied.add}ms ease-out;
+    transform ${durations.copied.add}ms ease-out,
+    opacity ${durations.copied.add}ms ease-out;
 }
 .${classes.close} {
   cursor: pointer;
@@ -116,7 +140,7 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
   border-radius: 100%;
   opacity: 0;
   transition:
-    border 0.2s ease-out;
+    border ${durations.general.backword}ms ease-out;
 }
 .${classes.close}::before,
 .${classes.close}::after {
@@ -125,11 +149,15 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
   background: ${closeButtonColor};
   opacity: 0;
   transition:
-    background 0.2s ease-out;
+    background ${durations.general.backword}ms ease-out, transform ${
+    durations.general.backword
+  }ms ease-out;
 }
 .${classes.close}.${states.active} {
   opacity: 1;
-  animation: ${apprefix(`fade-in-${classes.close}`)} 1s ease-out;
+  animation: ${apprefix(`fade-in-${classes.close}`)} ${
+    durations.close.fadeIn
+  }ms ease-out;
 }
 @keyframes ${apprefix(`fade-in-${classes.close}`)} {
   0% {
@@ -154,15 +182,21 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
 }
 .${classes.close}.${states.active}::before {
   animation:
-    ${apprefix(`fade-in-${classes.close}-pseudo`)} 1.5s ease-out,
-    ${apprefix(`fade-in-${classes.close}-spin-before`)} 0.5s linear 3
-  ;
+    ${apprefix(`fade-in-${classes.close}-pseudo`)} ${
+    durations.close.fadeInPseudo
+  }ms ease-out,
+    ${apprefix(`fade-in-${classes.close}-spin-before`)} ${
+    durations.close.fadeInSpin
+  }ms linear 3;
 }
 .${classes.close}.${states.active}::after {
   animation:
-    ${apprefix(`fade-in-${classes.close}-pseudo`)} 1.5s ease-out,
-    ${apprefix(`fade-in-${classes.close}-spin-after`)} 0.5s linear 3
-  ;
+    ${apprefix(`fade-in-${classes.close}-pseudo`)} ${
+    durations.close.fadeInPseudo
+  }ms ease-out,
+    ${apprefix(`fade-in-${classes.close}-spin-after`)} ${
+    durations.close.fadeInSpin
+  }ms linear 3;
 }
 @keyframes ${apprefix(`fade-in-${classes.close}-pseudo`)} {
   0% {
@@ -230,12 +264,20 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
 }
 .${classes.close}:hover {
   border-color: ${closeButtonColorHover};
-  transition: border 0.3s ease-out;
+  transition: border ${durations.general.forward}ms ease-out;
 }
 .${classes.close}:hover::before,
 .${classes.close}:hover::after {
   background: ${closeButtonColorHover};
-  transition: background 0.3s ease-out;
+  transition: background ${durations.general.forward}ms ease-out, transform ${
+    durations.general.forward
+  }ms ease-out;
+}
+.${classes.close}:hover::before {
+  transform: rotate(225deg);
+}
+.${classes.close}:hover::after {
+  transform: rotate(405deg);
 }
 .${classes.close}:active {
   transform-origin: center;
@@ -261,13 +303,12 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
 .${classes.ul} > li.${states.active}.${classes.categoryTop} {
   padding-top: 1em;
   transition:
-    border ${intervals.valueColumn.fadeIn}ms ease-out ${
-  intervals.valueColumn.fadeIn
-}ms,
-    padding ${intervals.valueColumn.fadeIn}ms ease-out ${
-  intervals.valueColumn.fadeIn
-}ms
-    ;
+    border ${durations.categoryTop.fadeIn}ms ease-out ${
+    durations.categoryTop.fadeInDelay
+  }ms,
+    padding ${durations.categoryTop.fadeIn}ms ease-out ${
+    durations.categoryTop.fadeInDelay
+  }ms;
 }
 .${classes.ul} > li.${classes.categoryTop}::before {
   position: absolute;
@@ -281,9 +322,9 @@ export const Css = (appClass, apprefix, classes, states, intervals) => `
 }
 .${classes.ul} > li.${states.active}.${classes.categoryTop}::before {
   animation:
-  ${apprefix(`fade-in-${classes.categoryTop}-border`)} ${intervals.valueColumn
-  .fadeIn + 500}ms ease-out ${intervals.valueColumn.fadeIn}ms
-forwards;
+  ${apprefix(`fade-in-${classes.categoryTop}-border`)} ${
+    durations.categoryTopBorder.fadeIn
+  }ms ease-out ${durations.categoryTopBorder.fadeInDelay}ms forwards;
 }
 @keyframes ${apprefix(`fade-in-${classes.categoryTop}-border`)} {
   0% {
@@ -301,10 +342,9 @@ forwards;
 }
 .${classes.ul} > li.${states.active} > .${classes.nameColumn}{
   opacity: 1;
-  transition: opacity ${intervals.valueColumn.fadeIn}ms ease-out ${intervals
-  .valueColumn.fadeIn
-  + intervals.valueColumn.fadeIn
-  + 200}ms;
+  transition: opacity ${durations.nameColumn.fadeIn}ms ease-out ${
+    durations.nameColumn.fadeInDelay
+  }ms;
 }
 .${classes.ul} > li > .${classes.valueColumn}{
   opacity: 0;
@@ -312,8 +352,8 @@ forwards;
 }
 .${classes.ul} > li.${states.active} > .${classes.valueColumn}{
   animation: ${apprefix(`fade-in-${classes.valueColumn}`)} ${
-  intervals.valueColumn.fadeIn
-}ms ease-out forwards;
+    durations.valueColumn.fadeIn
+  }ms ease-out forwards;
 }
 @keyframes ${apprefix(`fade-in-${classes.valueColumn}`)} {
   from {
@@ -355,10 +395,15 @@ forwards;
   border-radius: 0 0 0 0;
   opacity: 0;
   transition:
-    transform 500ms ease-out ${intervals.valueColumn.fadeIn}ms,
-    border-radius 500ms ease-out ${intervals.valueColumn.fadeIn}ms,
-    opacity 1000ms ease-out ${intervals.valueColumn.fadeIn}ms
-    ;
+    transform ${durations.valueColumnCover.transform}ms ease-out ${
+    durations.valueColumnCover.delay
+  }ms,
+    border-radius ${durations.valueColumnCover.borderRadius}ms ease-out ${
+    durations.valueColumnCover.delay
+  }ms,
+    opacity ${durations.valueColumnCover.opacity}ms ease-out ${
+    durations.valueColumnCover.delay
+  }ms;
 }
 .${classes.text} {
   font-family: ${fontFamilyMonospace};
@@ -371,7 +416,7 @@ forwards;
   border: none;
   user-select: text;
   cursor: pointer;
-  transition: background 0.2s ease-out;
+  transition: background ${durations.general.backword}ms ease-out;
 }
 .${classes.text}::selection {
   background: #7b3fa1;
@@ -380,7 +425,7 @@ forwards;
 .${classes.text}:hover {
   background: #000;
   color: #fff;
-  transition: background 0.3s ease-out;
+  transition: background ${durations.general.forward}ms ease-out;
 }
 .${classes.text}:active {
   color: transparent;
@@ -422,5 +467,8 @@ forwards;
   width: calc(${toFomulaTextKeyValueSpanWidth()});
 }
 `;
+};
 
-export default Css;
+export default {
+  createStyle,
+};

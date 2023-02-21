@@ -4,11 +4,18 @@ const pja = require('../../personal-json-accessor');
 const log = (obj) => console.log(obj);
 const logln = () => log('');
 
-const getAppModuleNames = () =>
-  fs
-    .readdirSync('source/js')
-    .filter((name) => name.match(/\.js$/))
-    .map((name) => name.replace(/\..+$/, ''));
+const getAppModuleNames = () => [
+  ...['bookmarklets', 'userscripts'].reduce(
+    (reducing, category) => [
+      ...reducing,
+      ...fs
+        .readdirSync(`source/${category}`)
+        .filter((name) => name.match(/[^.doc]\.js$/))
+        .map((name) => `${category}/${name.replace(/\..+$/, '')}`),
+    ],
+    []
+  ),
+];
 
 const literals = {
   specifiedAppNames: 'specified app names -> ',

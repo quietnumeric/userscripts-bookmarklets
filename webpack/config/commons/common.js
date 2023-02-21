@@ -9,15 +9,18 @@ if (!appNames || appNames.length === 0) {
   process.exit(1);
 }
 
-const outAppNames = () => {
-  console.log('app =>'.cyan);
-  appNames.forEach((appName) => console.log(`  ${appName.green}`));
+const outTitledElements = (title, elements) => {
+  console.log(`${title} =>`.cyan);
+  elements.forEach((element) => console.log(`  ${element.green}`));
 };
 
-const toEntry = () => appNames.reduce((json, key) => {
-  json[key] = `./source/${key}.js`;
-  return json;
-}, {});
+const outAppNames = () => outTitledElements('app', appNames);
+
+const toEntry = () =>
+  appNames.reduce((json, key) => {
+    json[key] = `./source/${key}.js`;
+    return json;
+  }, {});
 
 const config = {
   entry: toEntry(),
@@ -48,4 +51,5 @@ module.exports = {
   config,
   personal: personalJson,
   outAppNames,
+  outTitledElements,
 };

@@ -13,32 +13,32 @@ env:
   browser: true
 rules:
   # ペーストで済むようにJSONにとどめとこう
-  no-unused-vars: "warn"
-  quotes: ["error", "single", { "avoidEscape": true }]
-  no-console: ["error", { allow: ["warn", "error", "log", "dir"] }]
+  no-unused-vars: 'warn'
+  quotes: ['error', 'single', { 'avoidEscape': true }]
+  no-console: ['error', { allow: ['warn', 'error', 'log', 'dir'] }]
   comma-dangle:
     [
-      "error",
+      'error',
       {
-        "arrays": "always-multiline",
-        "exports": "always-multiline",
-        "functions": "never",
-        "imports": "always-multiline",
-        "objects": "always-multiline",
+        'arrays': 'always-multiline',
+        'exports': 'always-multiline',
+        'functions': 'never',
+        'imports': 'always-multiline',
+        'objects': 'always-multiline',
       },
     ]
-  func-names: ["error", "never"]
+  func-names: ['error', 'never']
   space-before-function-paren:
-    ["error", { "anonymous": "always", "named": "never" }]
-  wrap-iife: ["error", "inside"]
-  no-param-reassign: ["error", { "props": false }]
+    ['error', { 'anonymous': 'always', 'named': 'never' }]
+  wrap-iife: ['error', 'inside']
+  no-param-reassign: ['error', { 'props': false }]
   guard-for-in: 0
   no-restricted-syntax: 0
-  no-constant-condition: ["error", { "checkLoops": false }]
+  no-constant-condition: ['error', { 'checkLoops': false }]
   prefer-destructuring: 0
   symbol-description: 0
-  yoda: [2, "never", { "exceptRange": true }]
+  yoda: [2, 'never', { 'exceptRange': true }]
   class-methods-use-this: 0
-  max-len: ["warn", { "code": 80 }]
+  max-len: ['warn', { 'code': 80 }]
   import/no-extraneous-dependencies:
-    ["error", { devDependencies: true, optionalDependencies: false }]
+    ['error', { devDependencies: true, optionalDependencies: false }]

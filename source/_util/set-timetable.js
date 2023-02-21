@@ -14,13 +14,16 @@ export const setTimetable = (...objects) => {
       return;
     }
     promise = promise.then(
-      (ms) => new Promise((resolve) => {
-        setTimeout(() => {
-          doFunc(i, resolve);
-        }, ms);
-      }),
+      (ms) =>
+        new Promise((resolve) => {
+          setTimeout(() => {
+            doFunc(i, resolve);
+          }, ms);
+        })
     );
   });
 };
 
-export default setTimetable;
+export default {
+  setTimetable,
+};

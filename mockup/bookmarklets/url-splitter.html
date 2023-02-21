@@ -1,18 +1,71 @@
-<!DOCTYPE html>
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
     <title>url-splitter</title>
     <style>
       * {
-        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body,
+      main {
+        width: 100%;
+        height: 100%;
+      }
+
+      main {
+        overflow: hidden;
+        background: #bcbbc9;
+        cursor: pointer;
+      }
+
+      main .title {
+        margin-top: 3rem;
+      }
+
+      main:active .title {
+        transform: translateY(1px);
+        color: #555;
+      }
+
+      .title {
+        font-size: 1.2rem;
+        text-align: center;
+        display: grid;
+        grid-template-rows: 3rem 2rem;
+        align-items: flex-end;
+      }
+
+      .title .app-name {
+        margin: 0 0.5rem;
+      }
+
+      .app-name {
+        padding: 0.2rem 1rem;
+        background: #2c2b2e;
+        color: #a39ec6;
+        border-radius: 0.3rem;
+      }
+
+      main:active .app-name {
+        background: #3f3e41;
       }
     </style>
   </head>
   <body>
-    <main>
-      url-splitter
+    <main id="main">
+      <div class="title">
+        <p>ブックマークレット<span class="app-name">url-splitter</span>の開発用モックアップ</p>
+        <p>画面クリックでリロード・再実行</p>
+      </div>
     </main>
     <script type="text/javascript" src="url-splitter.js"></script>
+    <script>
+      main.addEventListener('click', () => {
+        window.location.reload();
+      });
+    </script>
   </body>
 </html>

@@ -1,77 +1,74 @@
-/* eslint-disable no-continue */
-
-// どっかからもらった
-// Returns true if it is a DOM node
-export const isNode = (o) => (typeof Node === 'object'
-  ? o instanceof Node
-  : o
-      && typeof o === 'object'
-      && typeof o.nodeType === 'number'
-      && typeof o.nodeName === 'string');
-
-// どっかからもらった
-// Returns true if it is a DOM element
-export const isElement = (o) => (typeof HTMLElement === 'object'
-  ? o instanceof HTMLElement // DOM2
-  : o
-      && typeof o === 'object'
-      && o !== null
-      && o.nodeType === 1
-      && typeof o.nodeName === 'string');
-
-export const addNodes = (parent) => (...child) => {
-  if (!child) return parent;
-  const children = Array.isArray(child[0]) ? child[0] : child;
-  for (let i = 0; i < children.length; i += 1) {
-    parent.appendChild(children[i]);
-  }
-  return parent;
+const setText = (element, text) => {
+  text
+    .split('\n')
+    .reduce((reducing, line, index) => {
+      // ...(index > 0 ? [document.createElement('br')] : []), は避けた
+      const elements = [document.createTextNode(line)];
+      if (index > 0) elements.unshift(document.createElement('br'));
+      return [...reducing, ...elements];
+    }, [])
+    .forEach((adding) => element.appendChild(adding));
 };
 
-export const setText = (element, text) => {
-  const argTextLines = text.split('\n');
-  for (let i = 0; i < argTextLines.length; i += 1) {
-    if (i > 0) {
-      element.appendChild(document.createElement('br'));
-    }
-    const argTextLine = argTextLines[i];
-    const textNode = document.createTextNode(argTextLine);
-    element.appendChild(textNode);
-  }
+const setUnderStairProps = (element, object, propName) =>
+  Object.keys(object).forEach((key) => {
+    element[propName][key] = object[key];
+  });
+
+const propKeysHasUnderStair = {
+  data: 'dataset',
+  style: 'style',
 };
 
-export const setPropsDeepCopy = (element, json, propName) => {
-  for (const key in json) {
-    element[propName][key] = json[key];
-  }
-};
-
-export const setProps = (element, propJson) => {
-  for (const key in propJson) {
-    const value = propJson[key];
-    if (key === 'data') {
-      // data属性の時は下降
-      setPropsDeepCopy(element, value, 'dataset');
-      continue;
-    }
-    if (key === 'style') {
-      // style属性の時は下降
-      setPropsDeepCopy(element, value, 'style');
-      continue;
+const setProps = (element, props) =>
+  Object.keys(props).forEach((key) => {
+    const value = props[key];
+    const propKeyForUnderStair = propKeysHasUnderStair[key];
+    // data・style属性の時は下降
+    if (propKeyForUnderStair) {
+      setUnderStairProps(element, value, propKeyForUnderStair);
+      return;
     }
     element[key] = value;
-  }
-};
+  });
 
-export const debug = (obj) => {
+const debug = (obj) => {
   const doDebug = false;
   if (doDebug) console.log(obj);
 };
 
-export function fixArgs(text, props, children) {
+// どっかからもらった
+// Returns true if it is a DOM node
+export const isNode = (o) =>
+  typeof Node === 'object'
+    ? o instanceof Node
+    : o &&
+      typeof o === 'object' &&
+      typeof o.nodeType === 'number' &&
+      typeof o.nodeName === 'string';
+
+// どっかからもらった
+// Returns true if it is a DOM element
+export const isElement = (o) =>
+  typeof HTMLElement === 'object'
+    ? o instanceof HTMLElement // DOM2
+    : o &&
+      typeof o === 'object' &&
+      o !== null &&
+      o.nodeType === 1 &&
+      typeof o.nodeName === 'string';
+
+export const addNodes = (parent) => (...children) => {
+  if (!children) return parent;
+  const childArray = Array.isArray(children[0]) ? children[0] : children;
+  childArray.forEach((child) => parent.appendChild(child));
+  return parent;
+};
+
+const fixArgs = (text, props, children) => {
   // eslint-disable-next-line prefer-rest-params
-  if (!Array.from(arguments).some((arg) => arg)) return null;
-  const retJson = {
+  if ([text, props, children].every((arg) => !arg)) return null;
+  const retObject = {
     text: null,
     children: [],
     props: null,
@@ -80,61 +77,67 @@ export function fixArgs(text, props, children) {
   const textIsText = typeof text === 'string';
   debug(`textIsText: ${textIsText}`);
   if (textIsText) {
-    retJson.text = text;
+    retObject.text = text;
   }
-  // jsonとelement配列の判断は、先にelement配列を確定
+  // objectとelement配列の判断は、先にelement配列を確定
   // 記法の関係上、 前詰めでelementが渡るとしても、textとprops にelement配列が渡る事はなく、単一elementで渡るはず
   // 3種類の引数のうち、elementとしての有効値が初めて登場したら後は全部element
   // 有効elementより前に見つけたundefinedはelement配列に含めない
   const textIsElement = isElement(text);
   debug(`textIsElement: ${textIsElement}`);
   if (textIsElement) {
-    retJson.children.push(text);
-    debug(`retJson.children: ${retJson.children.length}`);
+    retObject.children.push(text);
+    debug(`retObject.children: ${retObject.children.length}`);
   }
   const propsIsElement = isElement(props);
   debug(`propsIsElement: ${propsIsElement}`);
   // textがelementでchildrenもありなら間に挟まっているものはundefinedでもelement想定
   if ((textIsElement && children.length > 0) || propsIsElement) {
-    retJson.children.push(props);
-    debug(`retJson.children: ${retJson.children.length}`);
+    retObject.children.push(props);
+    debug(`retObject.children: ${retObject.children.length}`);
   }
   debug(`children: [${children.length}]: ${children}`);
-  retJson.children = retJson.children.concat(children);
-  debug(`retJson.children: ${retJson.children.length}`);
-  // jsonの判断は、 text と propJson のみ
-  const textIsJson = typeof text === 'object' && !textIsElement;
-  const propsIsJson = !textIsJson && typeof props === 'object' && !propsIsElement;
-  if (textIsJson || propsIsJson) {
-    retJson.props = textIsJson ? text : props;
+  retObject.children = retObject.children.concat(children);
+  debug(`retObject.children: ${retObject.children.length}`);
+  // objectの判断は、 text と propObject のみ
+  const textIsObject = typeof text === 'object' && !textIsElement;
+  const propsIsObject =
+    !textIsObject && typeof props === 'object' && !propsIsElement;
+  if (textIsObject || propsIsObject) {
+    retObject.props = textIsObject ? text : props;
   }
-  return retJson;
-}
+  return retObject;
+};
 
 export const dom = (tagName, text, props, ...children) => {
   debug(`▼elm: ${tagName}`);
   const element = document.createElement(tagName);
-  const argJson = fixArgs(text, props, children);
-  debug(argJson);
-  if (!argJson) return element;
-  if (argJson.text) setText(element, argJson.text);
-  if (argJson.props) setProps(element, argJson.props);
-  if (argJson.children.length > 0) addNodes(element)(argJson.children);
+  const argObject = fixArgs(text, props, children);
+  debug(argObject);
+  if (!argObject) return element;
+  if (argObject.text) setText(element, argObject.text);
+  if (argObject.props) setProps(element, argObject.props);
+  if (argObject.children.length > 0) addNodes(element)(argObject.children);
   debug(element);
   return element;
 };
 
-export const findChild = (obj, returnTrueWhenMatchedFanc) => Array.from(obj.children).find((child) => returnTrueWhenMatchedFanc(child));
+export const findChild = (obj, returnTrueWhenMatchedFanc) =>
+  Array.from(obj.children).find((child) => returnTrueWhenMatchedFanc(child));
 
 export const remove = (element) => {
   element.parentNode.removeChild(element);
 };
 
-export default {
+export const domCreator = {
   dom,
   addNodes,
   findChild,
   remove,
   isElement,
   isNode,
+};
+
+export default {
+  domCreator,
 };
