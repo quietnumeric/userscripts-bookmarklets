@@ -9,7 +9,8 @@ const cancelActive = (element) =>
 const classon = (...classes) => ({
   className: classes.join(' '),
 });
-const getSelection = () => window.getSelection().toString();
+const getSelectedText = () => window.getSelection().toString();
+const cancelSelect = () => window.getSelection().removeAllRanges();
 
 export const createMaterials = (appClassName) => {
   // HistoryAPIでの書き換えにも対応したいので、毎回取得
@@ -48,12 +49,14 @@ export const createMaterials = (appClassName) => {
     inputProps.readOnly = 'readonly';
     const input = dom('input', inputProps);
     input.addEventListener('mouseup', () => {
-      if (getSelection() === '') {
-        input.select();
+      const selected = getSelectedText();
+      if (selected === input.value) {
+        cancelSelect();
+        return;
       }
-      const copiedText = getSelection();
+      if (selected === '') input.select();
+      const copiedText = getSelectedText();
       const copiedThen = () => {
-        console.log('then');
         const copiedMessage = dom(
           'div',
           copiedText,
