@@ -51,32 +51,33 @@ export const createMaterials = (appClassName) => {
       if (getSelection() === '') {
         input.select();
       }
-      document.execCommand('copy');
       const copiedText = getSelection();
-      // await navigator.clipboard.writeText(copiedText);
-      // に(regeneratorRuntimeを入れて)すべきところ
-      // 但しブックマークレットとしての文字数制限が気になるので、babelでのawaitは見送り
-      const copiedMessage = dom(
-        'div',
-        copiedText,
-        classon(classNames.copiedMessage)
-      );
-      const style = copiedMessage.style;
-      const top = input.clientTop - 12;
-      const left = input.clientLeft + 21;
-      style.top = `${top}px`;
-      style.left = `${left}px`;
-      const parent = input.parentNode;
-      console.log(parent);
-      setTimetable(
-        () => parent.appendChild(copiedMessage),
-        10,
-        () => toActive(copiedMessage),
-        durations.copied.stay,
-        () => cancelActive(copiedMessage),
-        durations.copied.remove,
-        () => parent.removeChild(copiedMessage)
-      );
+      const copiedThen = () => {
+        console.log('then');
+        const copiedMessage = dom(
+          'div',
+          copiedText,
+          classon(classNames.copiedMessage)
+        );
+        const style = copiedMessage.style;
+        const top = input.clientTop - 12;
+        const left = input.clientLeft + 21;
+        style.top = `${top}px`;
+        style.left = `${left}px`;
+        const parent = input.parentNode;
+        setTimetable(
+          () => parent.appendChild(copiedMessage),
+          10,
+          () => toActive(copiedMessage),
+          durations.copied.stay,
+          () => cancelActive(copiedMessage),
+          durations.copied.remove,
+          () => parent.removeChild(copiedMessage)
+        );
+      };
+      // async/awaitを使えるようにするのはブックマークレットには不向き
+      // _util/using-async-await.js 参照
+      navigator.clipboard.writeText(copiedText).then(copiedThen);
     });
     return input;
   };
