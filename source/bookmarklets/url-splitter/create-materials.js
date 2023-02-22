@@ -48,14 +48,37 @@ export const createMaterials = (appClassName) => {
     inputProps.value = text;
     inputProps.readOnly = 'readonly';
     const input = dom('input', inputProps);
+    const setSelectedTextPre = (selectedTextPre = '') => {
+      input.dataset.selectedTextPre = selectedTextPre;
+    };
+    const getSelectedTextPre = () => input.dataset.selectedTextPre;
+    setSelectedTextPre();
+    // ドラッグしたままinput要素外に出るケースをケアするには最終的に
+    // documentレベルでの判定が必要になるのでブックマークレットとしてはノーケア
+    input.addEventListener('focus', () => {
+      // console.log('+ focus');
+    });
+    input.addEventListener('blur', () => {
+      setSelectedTextPre();
+      // console.log('- blur');
+    });
     input.addEventListener('mouseup', () => {
-      const selected = getSelectedText();
-      if (selected === input.value) {
+      const selectedText = getSelectedText();
+      // console.log('>> mouseup');
+      // console.log('selected:', selectedText);
+      // console.log('input   :', input.value);
+      if (getSelectedTextPre() && getSelectedTextPre() === selectedText) {
         cancelSelect();
+        setSelectedTextPre();
+        // console.log('-> clear');
         return;
       }
-      if (selected === '') input.select();
+      if (selectedText === '') {
+        input.select();
+        // console.log('-> select all');
+      }
       const copiedText = getSelectedText();
+      setSelectedTextPre(copiedText);
       const copiedThen = () => {
         const copiedMessage = dom(
           'div',
