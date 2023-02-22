@@ -459,8 +459,6 @@ export const createStyle = (
 }
 .${classes.textHashSeparator} {
   ${separatorDefine}
-  transform-origin: center;
-  transform: rotateZ(-45deg);
 }
 .${classes.textHashPlain} {
   position: relative;
