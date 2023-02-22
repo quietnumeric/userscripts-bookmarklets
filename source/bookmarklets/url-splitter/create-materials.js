@@ -70,7 +70,7 @@ export const createMaterials = (appClassName) => {
         const parent = input.parentNode;
         setTimetable(
           () => parent.appendChild(copiedMessage),
-          10,
+          100,
           () => toActive(copiedMessage),
           durations.copied.stay,
           () => cancelActive(copiedMessage),
