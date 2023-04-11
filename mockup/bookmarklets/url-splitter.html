@@ -3,6 +3,11 @@
     <meta charset="utf-8" />
     <title>userscripts-bookmarklets</title>
     <style>
+      :root {
+        --background-color-paths-item-anchor-active: #050a1d;
+        --background-color-paths-item-anchor-current: #a0a6bf;
+      }
+
       * {
         margin: 0;
         padding: 0;
@@ -82,7 +87,7 @@
         position: absolute;
         width: 100%;
         height: 100%;
-        background: #050a1d;
+        background: var(--background-color-paths-item-anchor-active);
         z-index: 1;
         opacity: 0;
         transform: translateX(-100%);
@@ -91,7 +96,16 @@
 
       .paths-item-anchor.current {
         pointer-events: none;
-        background: #a0a6bf;
+        animation: appear-paths-item-anchor-current 0.2s ease-out forwards;
+      }
+
+      @keyframes appear-paths-item-anchor-current {
+        from {
+          background: var(--background-color-paths-item-anchor-active);
+        }
+        to {
+          background: var(--background-color-paths-item-anchor-current);
+        }
       }
 
       .paths-item-anchor-label {
