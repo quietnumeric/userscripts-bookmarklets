@@ -1,37 +1,38 @@
-const defineProperty = (object, key, innerKey, func) => {
-  Object.defineProperty(object, key, {
-    get: () => object[innerKey],
-    set: (newValue) => {
-      if (object[innerKey] === newValue) return;
-      object[innerKey] = newValue;
-      if (func) func(newValue);
-    },
-  });
+export const Observer = (entity) => {
+  const bind = (key, maySet, mayGet) => {
+    const accessors =
+      typeof maySet === 'object'
+        ? {
+            set: maySet.set || (() => {}),
+            get: maySet.get || ((currentValue) => currentValue),
+          }
+        : {
+            set: maySet,
+            get: mayGet || ((currentValue) => currentValue),
+          };
+
+    const entityKey = `_${key}`;
+    entity[entityKey] = entity[key];
+    accessors.set(entity[key]);
+    Object.defineProperty(entity, key, {
+      get: () => accessors.get(entity[entityKey]),
+      set: (newValue) => {
+        if (entity[entityKey] === newValue) return;
+        entity[entityKey] = newValue;
+        accessors.set(newValue);
+      },
+    });
+    return { bind };
+  };
+  return { bind };
 };
 
-export const Observer = (object) => {
-  const unbind = (key) => {
-    const innerKey = `_${key}`;
-    defineProperty(object, key, innerKey);
-    // eslint-disable-next-line no-use-before-define
-    return { bind, unbind };
-  };
-  const bind = (key, func) => {
-    const innerKey = `_${key}`;
-    object[innerKey] = object[key];
-    func(object[key]);
-    defineProperty(object, key, innerKey, func);
-    return { bind, unbind };
-  };
-  return { bind, unbind };
-};
-
-const observedKeys = (object) =>
-  Object.keys(object).filter((key) => !key.startsWith('_'));
+const observedKeys = (entity) =>
+  Object.keys(entity).filter((key) => !key.startsWith('_'));
 
 export const Observed = {
-  keys: (object) => observedKeys(object),
-  values: (object) => observedKeys(object).map((key) => object[key]),
+  keys: (entity) => observedKeys(entity),
+  values: (entity) => observedKeys(entity).map((key) => entity[key]),
 };
 
 export default {
