@@ -1,7 +1,7 @@
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
-    <title>url-splitter</title>
+    <title>userscripts-bookmarklets</title>
     <style>
       * {
         margin: 0;
@@ -9,30 +9,39 @@
       }
 
       html,
-      body,
-      main {
-        width: 100%;
-        height: 100%;
+      body {
+        width: 100vw;
+        height: 100vh;
+      }
+
+      body {
+        background: #b9c1da;
+        color: #333;
       }
 
       main {
+        text-align: right;
         overflow: hidden;
-        background: #bcbbc9;
-        cursor: pointer;
+        margin: 0 1rem;
+        padding: 2rem 0;
       }
 
-      main .title {
-        margin-top: 3rem;
+      ul {
+        list-style: none;
       }
 
-      main:active .title {
-        transform: translateY(1px);
-        color: #555;
+      ul, li {
+        margin: 0;
+        padding: 0;
+      }
+
+      a:link, a:visited, a:hover, a:active {
+        text-decoration: none;
+        color: #333;
       }
 
       .title {
         font-size: 1.2rem;
-        text-align: center;
         display: grid;
         grid-template-rows: 3rem 2rem;
         align-items: flex-end;
@@ -43,28 +52,117 @@
       }
 
       .app-name {
-        padding: 0.2rem 1rem;
+        padding: 0.1rem 0.75rem;
         background: #2c2b2e;
         color: #a39ec6;
-        border-radius: 0.3rem;
+        border-radius: 1rem;
       }
 
-      main:active .app-name {
-        background: #3f3e41;
+      .paths {
+        margin: 1rem 0 0 0;
       }
+
+      .paths-item {
+        margin: 0.5rem 0 0 0;
+      }
+
+      .paths-item-anchor {
+        position: relative;
+        display: block;
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        overflow: hidden;
+        z-index: 0;
+      }
+
+      .paths-item-anchor::before {
+        pointer-events: none;
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #050a1d;
+        z-index: 1;
+        opacity: 0;
+        transform: translateX(-100%);
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+      }
+
+      .paths-item-anchor.current {
+        pointer-events: none;
+        background: #a0a6bf;
+      }
+
+      .paths-item-anchor-label {
+        padding: 0.5rem 1rem;
+        white-space: nowrap;
+        transition: color 0.2s ease-out;
+        z-index: 2;
+      }
+
+      .paths-item-anchor:hover::before {
+        opacity: 1;
+        transform: translateX(0);
+        transition: opacity 0.3s ease-out, transform 0.2s ease-out;
+      }
+
+      .paths-item-anchor:hover .paths-item-anchor-label {
+        color: #ccd2e8;
+        transition: color 0.3s ease-out;
+      }
+
+      .paths-item-anchor:active .paths-item-anchor-label,
+      .paths-item-anchor:focus .paths-item-anchor-label {
+        transition: color 0s ease-out;
+        color: transparent;
+        text-shadow: 0 1px #a0a6bf;
+      }
+
     </style>
   </head>
   <body>
-    <main id="main">
+    <main>
       <div class="title">
         <p>ブックマークレット<span class="app-name">url-splitter</span>の開発用モックアップ</p>
-        <p>画面クリックでリロード・再実行</p>
+        <p>以下、パラメーター付きで遷移する用のリンク</p>
       </div>
+      <ul class="paths" id="paths"></ul>
     </main>
     <script type="text/javascript" src="url-splitter.js"></script>
     <script>
-      main.addEventListener('click', () => {
-        window.location.reload();
+      const currentSearchHash = location.search + location.hash;
+      const ceateSeqKeyValueSearch = (length) => Array.from(new Array(length))
+        .map((_, index) => {
+          const seq = index + 1;
+          return `key${seq}=value${seq}`;
+        }).join('&');
+      [
+        '',
+        `?${ceateSeqKeyValueSearch(1)}`,
+        '#hash',
+        `?${ceateSeqKeyValueSearch(3)}#hash`,
+        `?${ceateSeqKeyValueSearch(5)}#hash`,
+        `?${ceateSeqKeyValueSearch(10)}#hash`,
+        `?${ceateSeqKeyValueSearch(20)}#hash`,
+        `?${ceateSeqKeyValueSearch(30)}#hash`,
+      ].map((searchHash) => ({
+        searchHash,
+        href: `./url-splitter.html${searchHash}`,
+        label: searchHash || '(no-search-hash)',
+      }))
+      .forEach(({ searchHash, href, label }) => {
+        const [ li, anchor, anchorLabel ] = [ 'li', 'a', 'span' ].map((nodeName) => document.createElement(nodeName));
+        anchor.href = href;
+        anchor.classList.add('paths-item-anchor');
+        anchorLabel.textContent = label;
+        anchorLabel.classList.add('paths-item-anchor-label');
+        if (searchHash === currentSearchHash) anchor.classList.add('current');
+        li.classList.add('paths-item');
+        anchor.appendChild(anchorLabel);
+        li.appendChild(anchor);
+        // いつからHTMLと一緒に書くscript要素内ではDOMをid属性値で未宣言参照できるらしい
+        paths.appendChild(li);
       });
     </script>
   </body>
