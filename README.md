@@ -1,6 +1,6 @@
 # userscripts-bookmarklets
-### GitHub Pages: [url-splitter](https://github.com/quietnumeric/userscripts-bookmarklets/tree/master/distribution/bookmarklets/url-splitter)の開発用モックアップをトップページとして公開中
-https://quietnumeric.github.io/userscripts-bookmarklets/
+### GitHub Pages: [url-splitter](https://github.com/quietnumeric/userscripts-bookmarklets/tree/master/distribution/bookmarklets/url-splitter)の開発用モックアップを公開中
+https://quietnumeric.github.io/userscripts-bookmarklets/bookmarklets/url-splitter/
 ***
 ### 作ったユーザースクリプトやブックマークレットをシェア
 
